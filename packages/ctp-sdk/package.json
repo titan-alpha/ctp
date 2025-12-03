@@ -1,0 +1,71 @@
+{
+  "name": "@conveniencepro/ctp-sdk",
+  "version": "1.0.0",
+  "description": "Embeddable SDK for ConveniencePro tools - integrate CTP tools into any website",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "browser": "dist/sdk.global.js",
+  "unpkg": "dist/sdk.global.js",
+  "jsdelivr": "dist/sdk.global.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./embed": {
+      "import": "./dist/embed.mjs",
+      "require": "./dist/embed.js",
+      "types": "./dist/embed.d.ts"
+    },
+    "./autosense": {
+      "import": "./dist/autosense.mjs",
+      "require": "./dist/autosense.js",
+      "types": "./dist/autosense.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/embed.ts src/autosense.ts --format cjs,esm --dts --clean && tsup src/sdk.global.ts --format iife --globalName ConveniencePro --minify",
+    "dev": "tsup src/index.ts src/embed.ts src/autosense.ts --format cjs,esm --dts --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "ctp",
+    "conveniencepro",
+    "sdk",
+    "embed",
+    "iframe",
+    "widget",
+    "tools"
+  ],
+  "author": "ConveniencePro",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/conveniencepro/convenience-pro.git",
+    "directory": "packages/ctp-sdk"
+  },
+  "homepage": "https://conveniencepro.cc/docs/sdk",
+  "bugs": {
+    "url": "https://github.com/conveniencepro/convenience-pro/issues"
+  },
+  "dependencies": {
+    "@conveniencepro/ctp-core": "^1.0.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
