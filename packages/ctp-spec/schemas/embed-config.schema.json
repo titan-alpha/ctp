@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://conveniencepro.cc/schemas/embed-config.schema.json",
+  "title": "CTP Embed Configuration",
+  "description": "Schema for ConveniencePro Tool Protocol embed configuration",
+  "type": "object",
+  "properties": {
+    "toolId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Tool to embed"
+    },
+    "baseUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "Base URL for embed service"
+    },
+    "embedPath": {
+      "type": "string",
+      "description": "Path to embed endpoint"
+    },
+    "width": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "number", "minimum": 0 }
+      ],
+      "description": "Width of embed"
+    },
+    "height": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "number", "minimum": 0 }
+      ],
+      "description": "Height of embed"
+    },
+    "minHeight": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "number", "minimum": 0 }
+      ],
+      "description": "Minimum height"
+    },
+    "theme": {
+      "type": "string",
+      "enum": ["light", "dark"],
+      "description": "Color theme"
+    },
+    "accentColor": {
+      "type": "string",
+      "description": "Primary accent color"
+    },
+    "backgroundColor": {
+      "type": "string",
+      "description": "Background color"
+    },
+    "textColor": {
+      "type": "string",
+      "description": "Text color"
+    },
+    "secondaryTextColor": {
+      "type": "string",
+      "description": "Secondary text color"
+    },
+    "borderColor": {
+      "type": "string",
+      "description": "Border color"
+    },
+    "inputBackground": {
+      "type": "string",
+      "description": "Input field background"
+    },
+    "fontFamily": {
+      "type": "string",
+      "description": "Font family stack"
+    },
+    "baseFontSize": {
+      "type": "number",
+      "minimum": 8,
+      "maximum": 32,
+      "description": "Base font size in pixels"
+    },
+    "borderRadius": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 32,
+      "description": "Border radius in pixels"
+    },
+    "borderWidth": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 4,
+      "description": "Border width in pixels"
+    },
+    "shadow": {
+      "type": "string",
+      "enum": ["none", "subtle", "medium", "large"],
+      "description": "Shadow intensity"
+    },
+    "density": {
+      "type": "string",
+      "enum": ["compact", "normal", "comfortable"],
+      "description": "UI density"
+    },
+    "autosense": {
+      "type": "boolean",
+      "default": true,
+      "description": "Auto-detect host page styles"
+    },
+    "watchTheme": {
+      "type": "boolean",
+      "default": true,
+      "description": "Watch for theme changes"
+    },
+    "loading": {
+      "type": "string",
+      "enum": ["lazy", "eager"],
+      "default": "lazy",
+      "description": "Loading behavior"
+    },
+    "allowClipboard": {
+      "type": "boolean",
+      "default": true,
+      "description": "Allow clipboard access"
+    },
+    "className": {
+      "type": "string",
+      "description": "CSS classes for container"
+    }
+  },
+  "additionalProperties": false
+}

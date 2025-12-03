@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://conveniencepro.cc/schemas/tool-result.schema.json",
+  "title": "CTP Tool Result",
+  "description": "Schema for ConveniencePro Tool Protocol execution results",
+  "type": "object",
+  "required": ["success"],
+  "properties": {
+    "success": {
+      "type": "boolean",
+      "description": "Whether the tool execution was successful"
+    },
+    "data": {
+      "description": "Result data on success"
+    },
+    "error": {
+      "type": "string",
+      "description": "Error message on failure"
+    },
+    "errorCode": {
+      "type": "string",
+      "enum": [
+        "INVALID_INPUT",
+        "MISSING_REQUIRED",
+        "TYPE_ERROR",
+        "CONSTRAINT_VIOLATION",
+        "EXECUTION_ERROR",
+        "TIMEOUT",
+        "RATE_LIMITED",
+        "UNAUTHORIZED",
+        "NOT_FOUND",
+        "INTERNAL_ERROR"
+      ],
+      "description": "Standardized error code"
+    },
+    "metadata": {
+      "$ref": "#/$defs/resultMetadata",
+      "description": "Execution metadata"
+    }
+  },
+  "if": {
+    "properties": {
+      "success": { "const": true }
+    }
+  },
+  "then": {
+    "required": ["success", "data"]
+  },
+  "else": {
+    "required": ["success", "error"]
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "resultMetadata": {
+      "type": "object",
+      "properties": {
+        "executionTime": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Execution time in milliseconds"
+        },
+        "inputSize": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Size of input in bytes"
+        },
+        "outputSize": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Size of output in bytes"
+        },
+        "cached": {
+          "type": "boolean",
+          "description": "Whether result was served from cache"
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Non-fatal warnings"
+        },
+        "toolVersion": {
+          "type": "string",
+          "description": "Version of tool that executed"
+        },
+        "executionMode": {
+          "type": "string",
+          "enum": ["client", "server"],
+          "description": "Where tool was executed"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
