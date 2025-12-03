@@ -1,0 +1,36 @@
+{
+  "name": "convenience-pro",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ConveniencePro monorepo - Browser-native utility tools and the ConveniencePro Tool Protocol (CTP)",
+  "workspaces": [
+    "packages/*",
+    "convenience-pro-website/utility-tools-website"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "build:packages": "npm run build --workspace=packages/ctp-core --workspace=packages/ctp-runtime --workspace=packages/ctp-discovery --workspace=packages/ctp-sdk",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules",
+    "dev": "npm run dev --workspace=convenience-pro-website/utility-tools-website"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/conveniencepro/convenience-pro.git"
+  },
+  "keywords": [
+    "conveniencepro",
+    "ctp",
+    "tool-protocol",
+    "browser-tools",
+    "mcp",
+    "llm-tools"
+  ],
+  "author": "ConveniencePro",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

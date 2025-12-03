@@ -1,0 +1,73 @@
+{
+  "name": "@conveniencepro/ctp-core",
+  "version": "1.0.0",
+  "description": "Core types and interfaces for the ConveniencePro Tool Protocol (CTP)",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types.mjs",
+      "require": "./dist/types.js",
+      "types": "./dist/types.d.ts"
+    },
+    "./validators": {
+      "import": "./dist/validators.mjs",
+      "require": "./dist/validators.js",
+      "types": "./dist/validators.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/types.ts src/validators.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts src/types.ts src/validators.ts --format cjs,esm --dts --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "ctp",
+    "conveniencepro",
+    "tool-protocol",
+    "types",
+    "typescript",
+    "llm-tools",
+    "mcp"
+  ],
+  "author": "ConveniencePro",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/conveniencepro/convenience-pro.git",
+    "directory": "packages/ctp-core"
+  },
+  "homepage": "https://conveniencepro.cc/docs/ctp",
+  "bugs": {
+    "url": "https://github.com/conveniencepro/convenience-pro/issues"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.7.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
