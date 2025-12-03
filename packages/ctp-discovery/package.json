@@ -1,0 +1,73 @@
+{
+  "name": "@conveniencepro/ctp-discovery",
+  "version": "1.0.0",
+  "description": "Discovery manifest generators for the ConveniencePro Tool Protocol (OpenAPI, AI tools, llms.txt)",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./openapi": {
+      "import": "./dist/openapi.mjs",
+      "require": "./dist/openapi.js",
+      "types": "./dist/openapi.d.ts"
+    },
+    "./ai-tools": {
+      "import": "./dist/ai-tools.mjs",
+      "require": "./dist/ai-tools.js",
+      "types": "./dist/ai-tools.d.ts"
+    },
+    "./llms-txt": {
+      "import": "./dist/llms-txt.mjs",
+      "require": "./dist/llms-txt.js",
+      "types": "./dist/llms-txt.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/openapi.ts src/ai-tools.ts src/llms-txt.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts src/openapi.ts src/ai-tools.ts src/llms-txt.ts --format cjs,esm --dts --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "ctp",
+    "conveniencepro",
+    "discovery",
+    "openapi",
+    "ai-tools",
+    "llms-txt",
+    "manifest"
+  ],
+  "author": "ConveniencePro",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/conveniencepro/convenience-pro.git",
+    "directory": "packages/ctp-discovery"
+  },
+  "homepage": "https://conveniencepro.cc/docs/ctp",
+  "bugs": {
+    "url": "https://github.com/conveniencepro/convenience-pro/issues"
+  },
+  "dependencies": {
+    "@conveniencepro/ctp-core": "^1.0.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
