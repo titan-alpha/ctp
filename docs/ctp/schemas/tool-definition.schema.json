@@ -1,0 +1,365 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://conveniencepro.cc/schemas/tool-definition.schema.json",
+  "title": "CTP Tool Definition",
+  "description": "Schema for ConveniencePro Tool Protocol tool definitions",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "description",
+    "category",
+    "tags",
+    "method",
+    "parameters",
+    "outputDescription",
+    "example"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Unique identifier for the tool (lowercase, hyphen-separated)"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 50,
+      "description": "Human-readable display name"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "description": "Detailed description of tool functionality"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "formatters",
+        "encoders",
+        "generators",
+        "converters",
+        "validators",
+        "analyzers",
+        "editors",
+        "utilities"
+      ],
+      "description": "Primary category for organization"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 30
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "Searchable tags for discoverability"
+    },
+    "method": {
+      "type": "string",
+      "enum": ["GET", "POST"],
+      "description": "HTTP method when exposed as API endpoint"
+    },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/parameterSchema"
+      },
+      "description": "Array of parameter definitions"
+    },
+    "outputDescription": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "Description of what the tool outputs"
+    },
+    "example": {
+      "$ref": "#/$defs/toolExample",
+      "description": "Example input/output for documentation"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of the tool"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Icon identifier or emoji"
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true,
+      "description": "Additional keywords for search"
+    },
+    "relatedTools": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+      },
+      "description": "IDs of related tools"
+    },
+    "aiInstructions": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Special instructions for AI models"
+    },
+    "rateLimit": {
+      "$ref": "#/$defs/rateLimitConfig",
+      "description": "Rate limiting configuration"
+    },
+    "executionMode": {
+      "type": "string",
+      "enum": ["client", "server", "hybrid"],
+      "default": "client",
+      "description": "Where the tool can be executed"
+    },
+    "requiresAuth": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether authentication is required"
+    },
+    "deprecated": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the tool is deprecated"
+    },
+    "deprecationMessage": {
+      "type": "string",
+      "description": "Message explaining deprecation"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "parameterSchema": {
+      "type": "object",
+      "required": ["name", "type", "label", "description", "required"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+          "minLength": 1,
+          "maxLength": 50,
+          "description": "Parameter identifier"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "text",
+            "textarea",
+            "number",
+            "boolean",
+            "select",
+            "json",
+            "file",
+            "color",
+            "date",
+            "datetime",
+            "url",
+            "email"
+          ],
+          "description": "Input field type"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50,
+          "description": "Display label"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Help text"
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Whether parameter is required"
+        },
+        "defaultValue": {
+          "description": "Default value if not provided"
+        },
+        "placeholder": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Placeholder text"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/selectOption"
+          },
+          "description": "Options for select type"
+        },
+        "validation": {
+          "$ref": "#/$defs/validationConstraints",
+          "description": "Validation constraints"
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dependencyRule"
+          },
+          "description": "Conditional display rules"
+        },
+        "group": {
+          "type": "string",
+          "description": "Group identifier for UI organization"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Display order"
+        },
+        "hidden": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to hide in UI"
+        },
+        "aiHint": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Guidance for AI models"
+        }
+      },
+      "additionalProperties": false
+    },
+    "selectOption": {
+      "type": "object",
+      "required": ["value", "label"],
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "Option value"
+        },
+        "label": {
+          "type": "string",
+          "description": "Display label"
+        },
+        "description": {
+          "type": "string",
+          "description": "Additional description"
+        },
+        "disabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether option is disabled"
+        }
+      },
+      "additionalProperties": false
+    },
+    "validationConstraints": {
+      "type": "object",
+      "properties": {
+        "minLength": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxLength": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pattern": {
+          "type": "string",
+          "format": "regex"
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "step": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "minItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "accept": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Accepted file types"
+        },
+        "maxSize": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum file size in bytes"
+        },
+        "custom": {
+          "type": "string",
+          "description": "Custom validation expression"
+        }
+      },
+      "additionalProperties": false
+    },
+    "dependencyRule": {
+      "type": "object",
+      "required": ["field", "condition"],
+      "properties": {
+        "field": {
+          "type": "string",
+          "description": "Field to depend on"
+        },
+        "condition": {
+          "type": "string",
+          "enum": ["equals", "notEquals", "contains", "exists"],
+          "description": "Condition type"
+        },
+        "value": {
+          "description": "Value to compare against"
+        }
+      },
+      "additionalProperties": false
+    },
+    "toolExample": {
+      "type": "object",
+      "required": ["input", "output"],
+      "properties": {
+        "input": {
+          "type": "object",
+          "description": "Example input parameters"
+        },
+        "output": {
+          "description": "Expected output"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the example"
+        }
+      },
+      "additionalProperties": false
+    },
+    "rateLimitConfig": {
+      "type": "object",
+      "properties": {
+        "requests": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of requests allowed"
+        },
+        "window": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Time window in seconds"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

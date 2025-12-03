@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://conveniencepro.cc/schemas/ctp-manifest.schema.json",
+  "title": "CTP Manifest",
+  "description": "Schema for ConveniencePro Tool Protocol manifest file",
+  "type": "object",
+  "required": ["ctpVersion", "name", "baseUrl", "tools"],
+  "properties": {
+    "ctpVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "CTP specification version"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Service name"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Service description"
+    },
+    "baseUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "Base URL for the service"
+    },
+    "apiPath": {
+      "type": "string",
+      "default": "/api/tools",
+      "description": "Path prefix for tool API endpoints"
+    },
+    "embedPath": {
+      "type": "string",
+      "default": "/embed",
+      "description": "Path prefix for embed endpoints"
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/manifestTool"
+      },
+      "description": "List of available tools"
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/categoryDefinition"
+      },
+      "description": "Category definitions"
+    },
+    "capabilities": {
+      "$ref": "#/$defs/serviceCapabilities",
+      "description": "Service capabilities"
+    },
+    "contact": {
+      "$ref": "#/$defs/contactInfo",
+      "description": "Contact information"
+    },
+    "license": {
+      "type": "string",
+      "description": "License identifier (e.g., MIT, Apache-2.0)"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "manifestTool": {
+      "type": "object",
+      "required": ["id", "name", "description", "category"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "icon": {
+          "type": "string"
+        },
+        "apiEndpoint": {
+          "type": "string",
+          "description": "Full API endpoint URL"
+        },
+        "embedUrl": {
+          "type": "string",
+          "description": "Full embed URL"
+        },
+        "method": {
+          "type": "string",
+          "enum": ["GET", "POST"]
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "tool-definition.schema.json#/$defs/parameterSchema"
+          }
+        },
+        "executionMode": {
+          "type": "string",
+          "enum": ["client", "server", "hybrid"]
+        },
+        "deprecated": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "categoryDefinition": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "order": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false
+    },
+    "serviceCapabilities": {
+      "type": "object",
+      "properties": {
+        "embedding": {
+          "type": "boolean",
+          "description": "Supports iframe embedding"
+        },
+        "autosense": {
+          "type": "boolean",
+          "description": "Supports autosense styling"
+        },
+        "api": {
+          "type": "boolean",
+          "description": "Provides REST API"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "Supports offline usage"
+        },
+        "realtime": {
+          "type": "boolean",
+          "description": "Supports real-time updates"
+        }
+      },
+      "additionalProperties": false
+    },
+    "contactInfo": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
