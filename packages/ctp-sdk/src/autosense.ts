@@ -103,7 +103,6 @@ export function detectFramework(): string | null {
     }
 
     // Check CSS variables
-    const styles = getComputedStyle(document.documentElement);
     for (const cssVar of pattern.cssVars) {
       // Check if any CSS variable with this prefix exists
       const allProps = Array.from(document.styleSheets)

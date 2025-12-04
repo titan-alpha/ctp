@@ -35,11 +35,8 @@ export const jsonFormatterDefinition: ToolDefinition = {
       description: 'The JSON string to format',
       required: true,
       placeholder: '{"name": "example", "value": 123}',
-      validation: {
-        minLength: 1,
-        maxLength: 1000000, // 1MB limit
-      },
-      aiHint: 'Accepts any valid JSON string including objects, arrays, and primitives',
+      minLength: 1,
+      maxLength: 1000000, // 1MB limit
     },
     {
       name: 'indent',
@@ -47,14 +44,13 @@ export const jsonFormatterDefinition: ToolDefinition = {
       label: 'Indentation',
       description: 'Number of spaces for indentation',
       required: false,
-      defaultValue: '2',
+      default: '2',
       options: [
         { value: '0', label: 'Minified', description: 'No whitespace' },
         { value: '2', label: '2 spaces', description: 'Standard indentation' },
         { value: '4', label: '4 spaces', description: 'Wide indentation' },
         { value: 'tab', label: 'Tab', description: 'Tab character' },
       ],
-      aiHint: 'Use 0/minified for production, 2 for debugging',
     },
     {
       name: 'sortKeys',
@@ -62,8 +58,7 @@ export const jsonFormatterDefinition: ToolDefinition = {
       label: 'Sort Keys',
       description: 'Sort object keys alphabetically',
       required: false,
-      defaultValue: false,
-      aiHint: 'Enable for consistent output or comparing JSON objects',
+      default: false,
     },
   ],
   outputDescription: 'Formatted JSON string with proper indentation',
@@ -79,13 +74,11 @@ export const jsonFormatterDefinition: ToolDefinition = {
       lineCount: 5,
       characterCount: 48,
     },
-    description: 'Format a simple JSON object with 2-space indentation',
+    name: 'Format a simple JSON object with 2-space indentation',
   },
   version: '1.0.0',
   icon: '📋',
-  keywords: ['format', 'prettify', 'lint', 'validate'],
   relatedTools: ['json-validator', 'json-minifier'],
-  aiInstructions: 'When formatting JSON for display, use 2-space indentation. When formatting for transmission or storage, use minified (0). Enable sortKeys when comparing JSON structures.',
   executionMode: 'client',
 };
 
@@ -122,7 +115,7 @@ export const jsonFormatterFn: ToolFunction<JsonFormatterResult> = (
   // Extract parameters
   const jsonInput = params.json as string;
   const indentOption = (params.indent as string) || '2';
-  const sortKeys = params.sortKeys === true || params.sortKeys === 'true';
+  const sortKeys = params.sortKeys === 'true' || Boolean(params.sortKeys);
 
   // Validate input exists
   if (!jsonInput || typeof jsonInput !== 'string') {

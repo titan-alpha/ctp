@@ -152,7 +152,7 @@ function createIframe(embedId: string, url: string, config: EmbedConfig): HTMLIF
   iframe.style.width = typeof config.width === 'number' ? `${config.width}px` : (config.width || '100%');
   iframe.style.height = config.height === 'auto'
     ? (typeof config.minHeight === 'number' ? `${config.minHeight}px` : (config.minHeight || '400px'))
-    : (typeof config.height === 'number' ? `${config.height}px` : config.height);
+    : (typeof config.height === 'number' ? `${config.height}px` : (config.height || 'auto'));
   iframe.style.minHeight = typeof config.minHeight === 'number' ? `${config.minHeight}px` : (config.minHeight || '400px');
   iframe.style.border = 'none';
   iframe.style.borderRadius = config.borderRadius ? `${config.borderRadius}px` : '8px';

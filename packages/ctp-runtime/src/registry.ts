@@ -12,7 +12,6 @@ import {
   ToolFunction,
   ToolResult,
   ToolParams,
-  NormalizedParams,
   ToolRegistry,
   ToolRegistryEntry,
   CTP_VERSION,

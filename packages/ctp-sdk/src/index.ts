@@ -68,8 +68,8 @@ export const SDK_VERSION = '1.0.0';
 // CONVENIENCE EXPORTS
 // =============================================================================
 
-import { embed, init as initEmbeds, EmbedConfig, EmbedController } from './embed';
-import { detectStyles, DetectedStyles } from './autosense';
+import { embed, init as initEmbeds } from './embed';
+import { detectStyles } from './autosense';
 
 /**
  * ConveniencePro SDK namespace

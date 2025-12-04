@@ -45,10 +45,8 @@ export const hashGeneratorDefinition: ToolDefinition = {
       description: 'Text to hash',
       required: true,
       placeholder: 'Enter text to hash',
-      validation: {
-        minLength: 1,
-        maxLength: 1000000,
-      },
+      minLength: 1,
+      maxLength: 1000000,
     },
     {
       name: 'algorithm',
@@ -56,14 +54,13 @@ export const hashGeneratorDefinition: ToolDefinition = {
       label: 'Algorithm',
       description: 'Hash algorithm to use',
       required: false,
-      defaultValue: 'SHA-256',
+      default: 'SHA-256',
       options: [
         { value: 'SHA-1', label: 'SHA-1', description: '160-bit (not secure, legacy only)' },
         { value: 'SHA-256', label: 'SHA-256', description: '256-bit (recommended)' },
         { value: 'SHA-384', label: 'SHA-384', description: '384-bit' },
         { value: 'SHA-512', label: 'SHA-512', description: '512-bit (strongest)' },
       ],
-      aiHint: 'Use SHA-256 for general purposes. SHA-1 is deprecated for security.',
     },
     {
       name: 'format',
@@ -71,7 +68,7 @@ export const hashGeneratorDefinition: ToolDefinition = {
       label: 'Output Format',
       description: 'How to format the hash output',
       required: false,
-      defaultValue: 'hex',
+      default: 'hex',
       options: [
         { value: 'hex', label: 'Hexadecimal', description: 'Lowercase hex string' },
         { value: 'base64', label: 'Base64', description: 'Base64 encoded string' },
@@ -91,13 +88,11 @@ export const hashGeneratorDefinition: ToolDefinition = {
       format: 'hex',
       inputLength: 11,
     },
-    description: 'Generate SHA-256 hash of "hello world"',
+    name: 'Generate SHA-256 hash of "hello world"',
   },
   version: '1.0.0',
   icon: '🔐',
-  keywords: ['checksum', 'digest', 'fingerprint', 'integrity'],
   relatedTools: ['hmac-generator', 'uuid-generator'],
-  aiInstructions: 'Use SHA-256 for most use cases. SHA-1 should only be used for legacy compatibility. SHA-512 provides the highest security but longer output.',
   executionMode: 'client',
 };
 

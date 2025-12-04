@@ -9,7 +9,6 @@
 
 import {
   ToolResult,
-  NormalizedParams,
   success,
   failure,
 } from '@conveniencepro/ctp-core';

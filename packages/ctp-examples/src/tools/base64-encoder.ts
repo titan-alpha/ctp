@@ -34,10 +34,8 @@ export const base64EncoderDefinition: ToolDefinition = {
       description: 'Text to encode or Base64 string to decode',
       required: true,
       placeholder: 'Hello, World!',
-      validation: {
-        minLength: 1,
-        maxLength: 500000,
-      },
+      minLength: 1,
+      maxLength: 500000,
     },
     {
       name: 'mode',
@@ -45,12 +43,11 @@ export const base64EncoderDefinition: ToolDefinition = {
       label: 'Mode',
       description: 'Operation to perform',
       required: false,
-      defaultValue: 'encode',
+      default: 'encode',
       options: [
         { value: 'encode', label: 'Encode', description: 'Convert text to Base64' },
         { value: 'decode', label: 'Decode', description: 'Convert Base64 to text' },
       ],
-      aiHint: 'Choose encode for text input, decode for Base64 input',
     },
     {
       name: 'urlSafe',
@@ -58,11 +55,7 @@ export const base64EncoderDefinition: ToolDefinition = {
       label: 'URL Safe',
       description: 'Use URL-safe Base64 variant (replaces +/ with -_)',
       required: false,
-      defaultValue: false,
-      dependsOn: [
-        { field: 'mode', condition: 'equals', value: 'encode' },
-      ],
-      aiHint: 'Enable when output will be used in URLs or filenames',
+      default: false,
     },
   ],
   outputDescription: 'Encoded Base64 string or decoded text',
@@ -78,11 +71,10 @@ export const base64EncoderDefinition: ToolDefinition = {
       inputLength: 13,
       outputLength: 20,
     },
-    description: 'Encode a simple greeting to Base64',
+    name: 'Encode a simple greeting to Base64',
   },
   version: '1.0.0',
   icon: '🔤',
-  keywords: ['encoding', 'binary', 'convert'],
   relatedTools: ['url-encoder', 'hex-encoder'],
   executionMode: 'client',
 };
@@ -143,7 +135,7 @@ export const base64EncoderFn: ToolFunction<Base64Result> = (
   // Extract parameters
   const input = params.input as string;
   const mode = (params.mode as 'encode' | 'decode') || 'encode';
-  const urlSafe = params.urlSafe === true || params.urlSafe === 'true';
+  const urlSafe = params.urlSafe === 'true' || Boolean(params.urlSafe);
 
   // Validate input
   if (!input || typeof input !== 'string') {
