@@ -1,0 +1,314 @@
+---
+title: 'Embedding'
+description: 'Embed CTP tools in any web page'
+---
+
+# Embedding Tools
+
+Use the CTP SDK to embed tools in any website.
+
+## SDK Installation
+
+### CDN
+
+```html
+<script src="https://cdn.conveniencepro.cc/sdk/v1/ctp-sdk.min.js"></script>
+```
+
+### npm
+
+```bash
+npm install @conveniencepro/ctp-sdk
+```
+
+```typescript
+import { CTP } from '@conveniencepro/ctp-sdk';
+```
+
+## Quick Start
+
+### Declarative Embedding
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.conveniencepro.cc/sdk/v1/ctp-sdk.min.js"></script>
+</head>
+<body>
+  <!-- Tool will render here -->
+  <div data-ctp-tool="json-formatter"></div>
+
+  <script>
+    CTP.init({ autosense: true });
+  </script>
+</body>
+</html>
+```
+
+### Programmatic Embedding
+
+```typescript
+import { CTP } from '@conveniencepro/ctp-sdk';
+
+CTP.init();
+
+const tool = CTP.render('json-formatter', document.getElementById('container'), {
+  defaults: { indent: '4' },
+  theme: 'dark',
+  onResult: (result) => console.log(result),
+});
+```
+
+## Configuration
+
+### Data Attributes
+
+```html
+<!-- Basic -->
+<div data-ctp-tool="json-formatter"></div>
+
+<!-- With defaults -->
+<div
+  data-ctp-tool="json-formatter"
+  data-ctp-indent="4"
+  data-ctp-sortKeys="true"
+></div>
+
+<!-- Hide parameters -->
+<div
+  data-ctp-tool="base64-encoder"
+  data-ctp-mode="encode"
+  data-ctp-hide="mode"
+></div>
+
+<!-- Theme -->
+<div
+  data-ctp-tool="json-formatter"
+  data-ctp-theme="dark"
+></div>
+```
+
+### Programmatic Options
+
+```typescript
+CTP.render('json-formatter', container, {
+  // Default parameter values
+  defaults: {
+    indent: '4',
+    sortKeys: true,
+  },
+
+  // Hide parameters from UI
+  hide: ['sortKeys'],
+
+  // Appearance
+  theme: 'light', // 'light' | 'dark' | 'auto'
+  compact: false,
+  showHeader: true,
+  showFooter: false,
+
+  // Behavior
+  autoSubmit: false,
+  debounce: 300,
+
+  // Callbacks
+  onResult: (result) => { /* ... */ },
+  onError: (error) => { /* ... */ },
+  onChange: (params) => { /* ... */ },
+});
+```
+
+## Theming
+
+### Auto Theme
+
+```typescript
+CTP.init({
+  theme: 'auto', // Uses system preference
+});
+```
+
+### CSS Variables
+
+```css
+:root {
+  --ctp-primary: #6366f1;
+  --ctp-background: #ffffff;
+  --ctp-surface: #f9fafb;
+  --ctp-text: #1f2937;
+  --ctp-border: #e5e7eb;
+  --ctp-radius: 0.5rem;
+}
+
+[data-ctp-theme="dark"] {
+  --ctp-background: #1f2937;
+  --ctp-surface: #374151;
+  --ctp-text: #f9fafb;
+  --ctp-border: #4b5563;
+}
+```
+
+### Framework Autosense
+
+The SDK automatically detects CSS frameworks:
+
+```typescript
+CTP.init({
+  autosense: true, // Auto-detect Tailwind, Bootstrap, etc.
+});
+```
+
+Supported frameworks:
+- Tailwind CSS
+- Bootstrap
+- Chakra UI
+- Material UI
+- shadcn/ui
+
+## Events and API
+
+### Tool Instance
+
+```typescript
+const tool = CTP.create('json-formatter', {
+  onResult: (result) => {
+    if (result.success) {
+      console.log('Output:', result.data);
+    }
+  },
+});
+
+// Mount to DOM
+document.getElementById('container').appendChild(tool.element);
+
+// Execute programmatically
+const result = await tool.execute({ json: '{"a":1}' });
+
+// Get current parameter values
+const params = tool.getParams();
+
+// Set parameter values
+tool.setParams({ indent: '4' });
+
+// Reset to defaults
+tool.reset();
+
+// Destroy instance
+tool.destroy();
+```
+
+### Global Events
+
+```typescript
+CTP.on('result', (event) => {
+  console.log('Tool:', event.toolId);
+  console.log('Result:', event.result);
+});
+
+CTP.on('error', (event) => {
+  console.error('Tool:', event.toolId);
+  console.error('Error:', event.error);
+});
+```
+
+## Iframe Embedding
+
+For complete isolation:
+
+```html
+<iframe
+  src="https://conveniencepro.cc/embed/json-formatter"
+  width="100%"
+  height="400"
+  frameborder="0"
+  sandbox="allow-scripts allow-forms"
+></iframe>
+```
+
+### PostMessage Communication
+
+```typescript
+const iframe = document.querySelector('iframe');
+
+// Send parameters
+iframe.contentWindow.postMessage({
+  type: 'ctp:setParams',
+  params: { json: '{"test":true}' },
+}, '*');
+
+// Execute tool
+iframe.contentWindow.postMessage({
+  type: 'ctp:execute',
+}, '*');
+
+// Receive results
+window.addEventListener('message', (event) => {
+  if (event.data.type === 'ctp:result') {
+    console.log('Result:', event.data.result);
+  }
+});
+```
+
+## React Integration
+
+```tsx
+import { useEffect, useRef } from 'react';
+import { CTP } from '@conveniencepro/ctp-sdk';
+
+function JsonFormatter() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const toolRef = useRef<CTPTool | null>(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      toolRef.current = CTP.render('json-formatter', containerRef.current, {
+        onResult: (result) => console.log(result),
+      });
+    }
+
+    return () => {
+      toolRef.current?.destroy();
+    };
+  }, []);
+
+  return <div ref={containerRef} />;
+}
+```
+
+## Vue Integration
+
+```vue
+<template>
+  <div ref="container"></div>
+</template>
+
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue';
+import { CTP } from '@conveniencepro/ctp-sdk';
+
+const container = ref(null);
+let tool = null;
+
+onMounted(() => {
+  tool = CTP.render('json-formatter', container.value, {
+    onResult: (result) => console.log(result),
+  });
+});
+
+onUnmounted(() => {
+  tool?.destroy();
+});
+</script>
+```
+
+## Responsive Behavior
+
+```typescript
+CTP.init({
+  responsive: {
+    compact: 640,  // Compact mode below 640px
+    stack: 480,    // Stack layout below 480px
+  },
+});
+```

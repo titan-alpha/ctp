@@ -1,0 +1,249 @@
+---
+title: 'Discovery'
+description: 'OpenAPI, MCP manifest, and llms.txt generation'
+---
+
+# Discovery Documents
+
+CTP tools are discoverable through multiple standardized formats.
+
+## Supported Formats
+
+| Format | Purpose | Consumers |
+|--------|---------|-----------|
+| OpenAPI 3.1 | API documentation | Swagger, Postman, API clients |
+| MCP Manifest | AI tool integration | Claude, Cursor, AI assistants |
+| llms.txt | LLM context | LLM-based applications |
+| CTP Manifest | Native CTP discovery | ConveniencePro ecosystem |
+| ChatGPT Plugin | ChatGPT integration | OpenAI plugins |
+
+## OpenAPI 3.1 Specification
+
+```typescript
+import { generateOpenAPISpec } from '@conveniencepro/ctp-discovery';
+
+const spec = generateOpenAPISpec(tools, {
+  info: {
+    title: 'My Tools API',
+    version: '1.0.0',
+    description: 'Collection of developer tools',
+  },
+  servers: [
+    { url: 'https://api.example.com/v1' },
+  ],
+});
+```
+
+### Generated Structure
+
+```yaml
+openapi: "3.1.0"
+info:
+  title: "My Tools API"
+  version: "1.0.0"
+paths:
+  /tools/json-formatter:
+    post:
+      operationId: "json-formatter"
+      summary: "JSON Formatter"
+      description: "Format, validate, and beautify JSON data"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ["json"]
+              properties:
+                json:
+                  type: string
+                  description: "JSON string to format"
+                indent:
+                  type: string
+                  enum: ["0", "2", "4", "tab"]
+                  default: "2"
+      responses:
+        "200":
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToolResult"
+```
+
+## MCP Manifest
+
+Generate Model Context Protocol compatible manifests:
+
+```typescript
+import { generateMCPManifest } from '@conveniencepro/ctp-discovery';
+
+const manifest = generateMCPManifest(tools, {
+  name: 'my-tools',
+  version: '1.0.0',
+  description: 'Developer tool collection',
+});
+```
+
+### Generated Structure
+
+```json
+{
+  "name": "my-tools",
+  "version": "1.0.0",
+  "description": "Developer tool collection",
+  "tools": [
+    {
+      "name": "json-formatter",
+      "title": "JSON Formatter",
+      "description": "Format, validate, and beautify JSON data",
+      "inputSchema": {
+        "type": "object",
+        "required": ["json"],
+        "properties": {
+          "json": {
+            "type": "string",
+            "description": "JSON string to format"
+          },
+          "indent": {
+            "type": "string",
+            "enum": ["0", "2", "4", "tab"],
+            "default": "2"
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+## llms.txt
+
+Generate context documents for LLMs:
+
+```typescript
+import { generateLlmsTxt } from '@conveniencepro/ctp-discovery';
+
+const llmsTxt = generateLlmsTxt(tools, {
+  baseUrl: 'https://conveniencepro.cc',
+  name: 'ConveniencePro Tools',
+});
+```
+
+### Generated Structure
+
+```markdown
+# ConveniencePro Tools
+
+> Developer tools for formatting, encoding, and generating data.
+
+## Available Tools
+
+### json-formatter
+Format, validate, and beautify JSON data with customizable indentation.
+
+**Parameters:**
+- `json` (required): JSON string to format
+- `indent`: Indentation style (0, 2, 4, tab). Default: 2
+- `sortKeys`: Sort object keys alphabetically
+
+**Example:**
+Input: {"b":2,"a":1}
+Output: {
+  "a": 1,
+  "b": 2
+}
+
+---
+
+### base64-encoder
+Encode text to Base64 or decode Base64 back to text.
+...
+```
+
+## CTP Manifest
+
+Native CTP discovery format:
+
+```typescript
+import { generateCTPManifest } from '@conveniencepro/ctp-discovery';
+
+const manifest = generateCTPManifest(tools, {
+  name: 'my-tools',
+  version: '1.0.0',
+  baseUrl: 'https://api.example.com',
+});
+```
+
+### Structure
+
+```json
+{
+  "$schema": "https://conveniencepro.cc/schemas/ctp-manifest.schema.json",
+  "version": "1.0.0",
+  "name": "my-tools",
+  "description": "Developer tool collection",
+  "baseUrl": "https://api.example.com",
+  "tools": [
+    {
+      "id": "json-formatter",
+      "path": "/tools/json-formatter",
+      "definition": { /* full tool definition */ }
+    }
+  ],
+  "categories": ["formatters", "encoders", "generators"],
+  "generatedAt": "2024-01-15T12:00:00Z"
+}
+```
+
+## Serving Discovery Documents
+
+### Express.js Example
+
+```typescript
+import express from 'express';
+import {
+  generateOpenAPISpec,
+  generateMCPManifest,
+  generateLlmsTxt,
+} from '@conveniencepro/ctp-discovery';
+
+const app = express();
+
+// OpenAPI spec
+app.get('/openapi.json', (req, res) => {
+  res.json(generateOpenAPISpec(tools));
+});
+
+// MCP manifest
+app.get('/.well-known/mcp.json', (req, res) => {
+  res.json(generateMCPManifest(tools));
+});
+
+// llms.txt
+app.get('/llms.txt', (req, res) => {
+  res.type('text/plain').send(generateLlmsTxt(tools));
+});
+```
+
+### Static Generation
+
+```typescript
+import { writeFileSync } from 'fs';
+
+// Generate at build time
+writeFileSync('public/openapi.json', JSON.stringify(generateOpenAPISpec(tools)));
+writeFileSync('public/.well-known/mcp.json', JSON.stringify(generateMCPManifest(tools)));
+writeFileSync('public/llms.txt', generateLlmsTxt(tools));
+```
+
+## Well-Known URLs
+
+CTP recommends these standard paths:
+
+| Path | Format | Purpose |
+|------|--------|---------|
+| `/openapi.json` | OpenAPI 3.1 | API documentation |
+| `/.well-known/mcp.json` | MCP | AI tool discovery |
+| `/llms.txt` | Text | LLM context |
+| `/.well-known/ctp.json` | CTP | Native discovery |
+| `/.well-known/ai-plugin.json` | ChatGPT | Plugin manifest |

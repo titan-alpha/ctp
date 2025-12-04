@@ -1,0 +1,130 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "ConveniencePro Tool Protocol",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#6366F1",
+    "light": "#818CF8",
+    "dark": "#4F46E5",
+    "anchors": {
+      "from": "#6366F1",
+      "to": "#8B5CF6"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "GitHub",
+      "url": "https://github.com/titan-alpha/convenience-pro"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "ConveniencePro",
+    "url": "https://conveniencepro.cc"
+  },
+  "tabs": [
+    {
+      "name": "Specification",
+      "url": "specification"
+    },
+    {
+      "name": "Implementation",
+      "url": "implementation"
+    },
+    {
+      "name": "Examples",
+      "url": "examples"
+    },
+    {
+      "name": "LLM Prompts",
+      "url": "llm-prompts"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "npm Packages",
+      "icon": "npm",
+      "url": "https://www.npmjs.com/org/conveniencepro"
+    },
+    {
+      "name": "MCP Compatibility",
+      "icon": "plug",
+      "url": "specification/mcp-compliance"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "introduction",
+        "quickstart"
+      ]
+    },
+    {
+      "group": "Specification",
+      "pages": [
+        "specification/overview",
+        "specification/tool-definition",
+        "specification/parameters",
+        "specification/execution",
+        "specification/results",
+        "specification/discovery",
+        "specification/embedding",
+        "specification/security",
+        "specification/mcp-compliance"
+      ]
+    },
+    {
+      "group": "Implementation",
+      "pages": [
+        "implementation/getting-started",
+        "implementation/creating-tools",
+        "implementation/validation",
+        "implementation/runtime",
+        "implementation/discovery-docs",
+        "implementation/embedding"
+      ]
+    },
+    {
+      "group": "Examples",
+      "pages": [
+        "examples/overview",
+        "examples/json-formatter",
+        "examples/base64-encoder",
+        "examples/hash-generator"
+      ]
+    },
+    {
+      "group": "LLM Integration",
+      "pages": [
+        "llm-prompts/overview",
+        "llm-prompts/tool-generator",
+        "llm-prompts/schema-reference"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/titan-alpha/convenience-pro",
+    "website": "https://conveniencepro.cc"
+  },
+  "openapi": "https://conveniencepro.cc/api/openapi.json",
+  "api": {
+    "baseUrl": "https://conveniencepro.cc/api"
+  },
+  "analytics": {
+    "posthog": {
+      "apiKey": ""
+    }
+  },
+  "feedback": {
+    "thumbsRating": true,
+    "suggestEdit": true,
+    "raiseIssue": true
+  },
+  "seo": {
+    "indexHiddenPages": false
+  }
+}

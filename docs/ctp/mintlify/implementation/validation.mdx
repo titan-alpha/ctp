@@ -1,0 +1,288 @@
+---
+title: 'Validation'
+description: 'Input and output validation for CTP tools'
+---
+
+# Validation
+
+CTP provides built-in validation for tool definitions, inputs, and outputs.
+
+## Definition Validation
+
+Validate tool definitions against the CTP schema:
+
+```typescript
+import { validateToolDefinition } from '@conveniencepro/ctp-core';
+
+const result = validateToolDefinition(myDefinition);
+
+if (!result.valid) {
+  result.errors.forEach(error => {
+    console.error(`${error.path}: ${error.message}`);
+  });
+}
+```
+
+### Validation Result
+
+```typescript
+interface ValidationResult {
+  valid: boolean;
+  errors: ValidationError[];
+}
+
+interface ValidationError {
+  path: string;      // JSON path to error (e.g., "parameters[0].name")
+  message: string;   // Human-readable error message
+  code: string;      // Error code (e.g., "MISSING_REQUIRED")
+}
+```
+
+### Common Validation Errors
+
+| Code | Message | Fix |
+|------|---------|-----|
+| `MISSING_REQUIRED` | Required field missing | Add the required field |
+| `INVALID_ID` | ID must be lowercase hyphen-separated | Use format `my-tool-name` |
+| `INVALID_CATEGORY` | Unknown category | Use one of 8 valid categories |
+| `DUPLICATE_PARAMETER` | Parameter name already used | Use unique parameter names |
+
+## Input Validation
+
+Validate parameters before execution:
+
+```typescript
+import { validateParameters } from '@conveniencepro/ctp-core';
+
+const result = validateParameters(myDefinition.parameters, userInput);
+
+if (!result.valid) {
+  return {
+    success: false,
+    error: result.errors[0].message,
+    errorCode: 'INVALID_INPUT',
+  };
+}
+```
+
+### Automatic Runtime Validation
+
+The runtime can validate automatically:
+
+```typescript
+import { createRuntime } from '@conveniencepro/ctp-runtime';
+
+const runtime = createRuntime(registry, {
+  validateInput: true,   // Validate before execution
+  validateOutput: true,  // Validate after execution
+});
+
+// Validation errors returned automatically
+const result = await runtime.execute('my-tool', { /* invalid params */ });
+// result.errorCode === 'INVALID_INPUT'
+```
+
+## Parameter Constraints
+
+### String Validation
+
+```typescript
+{
+  name: 'username',
+  type: 'text',
+  validation: {
+    minLength: 3,
+    maxLength: 20,
+    pattern: '^[a-z0-9_]+$',
+  },
+}
+```
+
+### Number Validation
+
+```typescript
+{
+  name: 'quantity',
+  type: 'number',
+  validation: {
+    min: 1,
+    max: 100,
+    step: 1,
+  },
+}
+```
+
+### File Validation
+
+```typescript
+{
+  name: 'document',
+  type: 'file',
+  validation: {
+    accept: ['.json', '.txt', 'application/json'],
+    maxSize: 5242880,  // 5MB
+  },
+}
+```
+
+## Manual Validation in Tools
+
+Implement validation in your tool function:
+
+```typescript
+export const myFn: ToolFunction = (params) => {
+  const input = params.input;
+
+  // 1. Required check
+  if (input === undefined || input === null || input === '') {
+    return {
+      success: false,
+      error: 'Input is required',
+      errorCode: 'MISSING_REQUIRED',
+    };
+  }
+
+  // 2. Type check
+  if (typeof input !== 'string') {
+    return {
+      success: false,
+      error: 'Input must be a string',
+      errorCode: 'TYPE_ERROR',
+    };
+  }
+
+  // 3. Length check
+  if (input.length < 1) {
+    return {
+      success: false,
+      error: 'Input must not be empty',
+      errorCode: 'CONSTRAINT_VIOLATION',
+    };
+  }
+
+  if (input.length > 100000) {
+    return {
+      success: false,
+      error: 'Input exceeds maximum length of 100,000 characters',
+      errorCode: 'CONSTRAINT_VIOLATION',
+    };
+  }
+
+  // 4. Pattern check
+  if (!/^[\s\S]*$/.test(input)) {
+    return {
+      success: false,
+      error: 'Input contains invalid characters',
+      errorCode: 'INVALID_INPUT',
+    };
+  }
+
+  // Validation passed, proceed with processing
+  return {
+    success: true,
+    data: process(input),
+  };
+};
+```
+
+## Result Validation
+
+Validate tool output:
+
+```typescript
+import { validateToolResult } from '@conveniencepro/ctp-core';
+
+const result = myFn(params);
+const validation = validateToolResult(result);
+
+if (!validation.valid) {
+  console.error('Tool returned invalid result:', validation.errors);
+}
+```
+
+### Result Requirements
+
+```typescript
+// ✅ Valid success result
+{ success: true, data: { /* ... */ } }
+
+// ✅ Valid error result
+{ success: false, error: 'message', errorCode: 'INVALID_INPUT' }
+
+// ❌ Invalid: missing success
+{ data: { /* ... */ } }
+
+// ❌ Invalid: success true but no data
+{ success: true }
+
+// ❌ Invalid: success false but no error
+{ success: false }
+```
+
+## Validation Helper Functions
+
+```typescript
+import {
+  isValidToolId,
+  isValidCategory,
+  isValidParameterType,
+} from '@conveniencepro/ctp-core';
+
+// Check ID format
+isValidToolId('my-tool');        // true
+isValidToolId('My Tool');        // false
+isValidToolId('my_tool');        // false
+
+// Check category
+isValidCategory('formatters');   // true
+isValidCategory('custom');       // false
+
+// Check parameter type
+isValidParameterType('text');    // true
+isValidParameterType('string');  // false
+```
+
+## Schema Validation
+
+Use JSON Schema for advanced validation:
+
+```typescript
+import Ajv from 'ajv';
+import toolDefinitionSchema from '@conveniencepro/ctp-spec/schemas/tool-definition.schema.json';
+
+const ajv = new Ajv();
+const validate = ajv.compile(toolDefinitionSchema);
+
+const valid = validate(myDefinition);
+if (!valid) {
+  console.error(validate.errors);
+}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Validate Early">
+    Check required parameters and basic types before doing any processing.
+  </Accordion>
+
+  <Accordion title="Provide Clear Messages">
+    Error messages should tell users exactly what's wrong and how to fix it.
+  </Accordion>
+
+  <Accordion title="Use Suggestions">
+    Include `suggestion` in error results to help users fix issues.
+    ```typescript
+    {
+      success: false,
+      error: 'Invalid JSON syntax',
+      errorCode: 'INVALID_INPUT',
+      suggestion: 'Check for missing commas or unquoted keys',
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Validate Constraints">
+    Enforce min/max lengths, ranges, and patterns to prevent edge cases.
+  </Accordion>
+</AccordionGroup>

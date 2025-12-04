@@ -1,0 +1,249 @@
+---
+title: 'Execution'
+description: 'Tool execution modes and runtime behavior'
+---
+
+# Tool Execution
+
+CTP defines three execution modes that determine where and how tools run.
+
+## Execution Modes
+
+### Client Mode (Default)
+
+Tools execute entirely in the browser using Web APIs.
+
+```typescript
+export const myDefinition: ToolDefinition = {
+  // ...
+  executionMode: 'client',
+};
+
+// Can use browser APIs
+export const myFn: ToolFunction = async (params) => {
+  // Web Crypto API
+  const hash = await crypto.subtle.digest('SHA-256', data);
+
+  // Fetch API
+  const response = await fetch(url);
+
+  // Canvas API
+  const canvas = document.createElement('canvas');
+
+  return { success: true, data: result };
+};
+```
+
+**Advantages:**
+- No server required
+- Complete privacy (data stays in browser)
+- No latency from network requests
+- Works offline
+
+**Limitations:**
+- No access to filesystem
+- No server-side secrets
+- Browser API limitations
+
+### Server Mode
+
+Tools require server-side execution.
+
+```typescript
+export const myDefinition: ToolDefinition = {
+  // ...
+  executionMode: 'server',
+};
+
+// Uses Node.js APIs
+export const myFn: ToolFunction = async (params) => {
+  const fs = await import('fs');
+  const crypto = await import('crypto');
+
+  // File system access
+  const content = fs.readFileSync(path);
+
+  // Server-side operations
+  const result = await database.query(sql);
+
+  return { success: true, data: result };
+};
+```
+
+**Use Cases:**
+- File system operations
+- Database access
+- External API calls requiring secrets
+- Heavy computation
+
+### Hybrid Mode
+
+Tools can execute in either environment with compatible implementations.
+
+```typescript
+export const myDefinition: ToolDefinition = {
+  // ...
+  executionMode: 'hybrid',
+};
+
+export const myFn: ToolFunction = async (params) => {
+  // Use compatible approach
+  if (typeof window !== 'undefined') {
+    // Browser: Use Web Crypto
+    return await browserImplementation(params);
+  } else {
+    // Node.js: Use crypto module
+    return await nodeImplementation(params);
+  }
+};
+```
+
+## Tool Function Signature
+
+```typescript
+type ToolFunction<T = unknown> = (
+  params: Record<string, unknown>,
+  context?: ExecutionContext
+) => ToolResult<T> | Promise<ToolResult<T>>;
+
+interface ExecutionContext {
+  toolId: string;
+  userId?: string;
+  requestId?: string;
+  timeout?: number;
+  abortSignal?: AbortSignal;
+}
+```
+
+## Synchronous vs Asynchronous
+
+### Synchronous Tools
+
+```typescript
+export const syncFn: ToolFunction = (params) => {
+  const result = processData(params.input);
+  return { success: true, data: result };
+};
+```
+
+### Asynchronous Tools
+
+```typescript
+export const asyncFn: ToolFunction = async (params) => {
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return { success: true, data: { hash } };
+};
+```
+
+## Runtime Behavior
+
+### Tool Registry
+
+```typescript
+import { ToolRegistry } from '@conveniencepro/ctp-runtime';
+
+const registry = new ToolRegistry();
+
+// Register tools
+registry.register(definition, fn);
+
+// Lookup tools
+const tool = registry.get('tool-id');
+
+// List all tools
+const tools = registry.list();
+
+// Check existence
+const exists = registry.has('tool-id');
+```
+
+### Execution Runtime
+
+```typescript
+import { createRuntime } from '@conveniencepro/ctp-runtime';
+
+const runtime = createRuntime(registry, {
+  timeout: 30000,        // Default timeout
+  validateInput: true,   // Validate before execution
+  validateOutput: true,  // Validate after execution
+});
+
+// Execute with full options
+const result = await runtime.execute('tool-id', params, {
+  timeout: 5000,
+  context: { userId: 'user-123' },
+});
+```
+
+### Timeout Handling
+
+```typescript
+const runtime = createRuntime(registry, {
+  timeout: 10000, // 10 second default
+});
+
+// Override per-execution
+const result = await runtime.execute('slow-tool', params, {
+  timeout: 60000, // 60 seconds for this call
+});
+
+// Handle timeout
+if (!result.success && result.errorCode === 'TIMEOUT') {
+  console.error('Tool execution timed out');
+}
+```
+
+### Abort Support
+
+```typescript
+const controller = new AbortController();
+
+// Start execution
+const promise = runtime.execute('tool-id', params, {
+  abortSignal: controller.signal,
+});
+
+// Abort after 5 seconds
+setTimeout(() => controller.abort(), 5000);
+
+try {
+  const result = await promise;
+} catch (error) {
+  if (error.name === 'AbortError') {
+    console.log('Execution was aborted');
+  }
+}
+```
+
+## Parallel Execution
+
+```typescript
+// Execute multiple tools in parallel
+const results = await Promise.all([
+  runtime.execute('tool-1', params1),
+  runtime.execute('tool-2', params2),
+  runtime.execute('tool-3', params3),
+]);
+```
+
+## Error Handling
+
+Always handle both success and failure cases:
+
+```typescript
+const result = await runtime.execute('tool-id', params);
+
+if (result.success) {
+  // Process result.data
+  console.log(result.data);
+} else {
+  // Handle error
+  console.error(`Error: ${result.error}`);
+  console.error(`Code: ${result.errorCode}`);
+
+  // Optional: Check suggestions
+  if (result.suggestion) {
+    console.log(`Suggestion: ${result.suggestion}`);
+  }
+}
+```

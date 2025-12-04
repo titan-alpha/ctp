@@ -1,0 +1,289 @@
+---
+title: 'MCP Compliance'
+description: 'Model Context Protocol compatibility'
+---
+
+# MCP Compliance
+
+CTP tools are designed for full compatibility with the [Model Context Protocol](https://modelcontextprotocol.io) (MCP).
+
+## Overview
+
+MCP is Anthropic's open protocol for AI-tool integration. CTP extends MCP with browser-native capabilities while maintaining full compatibility.
+
+<CardGroup cols={2}>
+  <Card title="Automatic Conversion" icon="arrows-rotate">
+    CTP tools automatically convert to MCP format
+  </Card>
+  <Card title="Bidirectional" icon="arrow-right-arrow-left">
+    MCP tools can be imported as CTP tools
+  </Card>
+</CardGroup>
+
+## Field Mapping
+
+### CTP → MCP Conversion
+
+| CTP Field | MCP Field | Conversion |
+|-----------|-----------|------------|
+| `id` | `name` | Direct copy |
+| `name` | `title` | Direct copy |
+| `description` | `description` | Direct copy |
+| `parameters[]` | `inputSchema` | Convert to JSON Schema |
+| `aiInstructions` | `instructions` | Direct copy |
+
+### Parameter to JSON Schema
+
+```typescript
+// CTP Parameter
+{
+  name: 'input',
+  type: 'textarea',
+  label: 'Input Text',
+  description: 'Text to process',
+  required: true,
+  validation: { minLength: 1, maxLength: 10000 }
+}
+
+// Converts to MCP inputSchema property
+{
+  "input": {
+    "type": "string",
+    "description": "Text to process",
+    "minLength": 1,
+    "maxLength": 10000
+  }
+}
+```
+
+## Conversion API
+
+### Generate MCP Manifest
+
+```typescript
+import { generateMCPManifest } from '@conveniencepro/ctp-discovery';
+
+const ctpTools = [jsonFormatter, base64Encoder, hashGenerator];
+
+const mcpManifest = generateMCPManifest(ctpTools, {
+  name: 'conveniencepro-tools',
+  version: '1.0.0',
+  description: 'Browser-native developer tools',
+});
+```
+
+### Output Structure
+
+```json
+{
+  "name": "conveniencepro-tools",
+  "version": "1.0.0",
+  "description": "Browser-native developer tools",
+  "tools": [
+    {
+      "name": "json-formatter",
+      "title": "JSON Formatter",
+      "description": "Format, validate, and beautify JSON data.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["json"],
+        "properties": {
+          "json": {
+            "type": "string",
+            "description": "The JSON string to format"
+          },
+          "indent": {
+            "type": "string",
+            "enum": ["0", "2", "4", "tab"],
+            "default": "2",
+            "description": "Number of spaces for indentation"
+          },
+          "sortKeys": {
+            "type": "boolean",
+            "default": false,
+            "description": "Sort object keys alphabetically"
+          }
+        }
+      },
+      "instructions": "Use 2-space indentation by default."
+    }
+  ]
+}
+```
+
+## Type Mapping
+
+### CTP Types to JSON Schema
+
+| CTP Type | JSON Schema Type | Additional Properties |
+|----------|------------------|----------------------|
+| `text` | `string` | - |
+| `textarea` | `string` | - |
+| `number` | `number` | `minimum`, `maximum` |
+| `boolean` | `boolean` | - |
+| `select` | `string` | `enum` |
+| `json` | `object` | - |
+| `file` | `string` | `format: "binary"` |
+| `color` | `string` | `pattern: "^#[0-9a-fA-F]{6}$"` |
+| `date` | `string` | `format: "date"` |
+| `datetime` | `string` | `format: "date-time"` |
+| `url` | `string` | `format: "uri"` |
+| `email` | `string` | `format: "email"` |
+
+### Validation Mapping
+
+| CTP Validation | JSON Schema |
+|----------------|-------------|
+| `minLength` | `minLength` |
+| `maxLength` | `maxLength` |
+| `pattern` | `pattern` |
+| `min` | `minimum` |
+| `max` | `maximum` |
+| `step` | `multipleOf` |
+
+## Import MCP Tools
+
+Convert MCP tools to CTP format:
+
+```typescript
+import { importMCPTool } from '@conveniencepro/ctp-core';
+
+const mcpTool = {
+  name: 'external-tool',
+  description: 'An external MCP tool',
+  inputSchema: {
+    type: 'object',
+    required: ['query'],
+    properties: {
+      query: { type: 'string', description: 'Search query' },
+    },
+  },
+};
+
+const ctpDefinition = importMCPTool(mcpTool, {
+  category: 'utilities',  // Required: CTP needs category
+  tags: ['search', 'external'],  // Required: CTP needs tags
+  executionMode: 'server',  // MCP tools typically need server
+});
+```
+
+## Serving MCP Endpoint
+
+### Well-Known URL
+
+```typescript
+app.get('/.well-known/mcp.json', (req, res) => {
+  const manifest = generateMCPManifest(tools);
+  res.json(manifest);
+});
+```
+
+### With Tool Execution
+
+```typescript
+app.post('/mcp/tools/:toolId/execute', async (req, res) => {
+  const { toolId } = req.params;
+  const params = req.body;
+
+  const result = await runtime.execute(toolId, params);
+
+  // Convert CTP result to MCP response format
+  res.json({
+    success: result.success,
+    result: result.data,
+    error: result.error,
+  });
+});
+```
+
+## AI Assistant Integration
+
+### Claude Desktop
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "conveniencepro": {
+      "command": "npx",
+      "args": ["-y", "@conveniencepro/mcp-server"]
+    }
+  }
+}
+```
+
+### Cursor
+
+Configure in Cursor settings:
+
+```json
+{
+  "mcp.servers": [
+    {
+      "name": "conveniencepro",
+      "url": "https://conveniencepro.cc/.well-known/mcp.json"
+    }
+  ]
+}
+```
+
+## Best Practices
+
+### 1. Include AI Instructions
+
+```typescript
+{
+  aiInstructions: 'Use SHA-256 for general hashing. Use SHA-512 for security-critical applications. Warn users if they request SHA-1.',
+}
+```
+
+### 2. Provide Clear Descriptions
+
+```typescript
+{
+  description: 'Generate cryptographic hashes using SHA algorithms. Supports hexadecimal and Base64 output formats.',
+  outputDescription: 'Hash digest of the input in the specified format',
+}
+```
+
+### 3. Include Examples
+
+```typescript
+{
+  example: {
+    input: { input: 'hello world', algorithm: 'SHA-256', format: 'hex' },
+    output: {
+      hash: 'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9',
+      algorithm: 'SHA-256',
+      format: 'hex',
+    },
+  },
+}
+```
+
+### 4. Use Parameter Hints
+
+```typescript
+{
+  name: 'algorithm',
+  type: 'select',
+  aiHint: 'Default to SHA-256 unless the user specifies otherwise',
+  options: [
+    { value: 'SHA-256', label: 'SHA-256', description: 'Recommended for general use' },
+    { value: 'SHA-512', label: 'SHA-512', description: 'Maximum security' },
+  ],
+}
+```
+
+## Compatibility Matrix
+
+| Feature | CTP | MCP | Notes |
+|---------|-----|-----|-------|
+| Tool definitions | ✅ | ✅ | Full compatibility |
+| Parameters | ✅ | ✅ | Converted to JSON Schema |
+| Results | ✅ | ✅ | Compatible format |
+| AI instructions | ✅ | ✅ | Direct mapping |
+| Browser execution | ✅ | ❌ | CTP-specific |
+| Autosense styling | ✅ | ❌ | CTP-specific |
+| Discovery docs | ✅ | ✅ | MCP manifest generated |

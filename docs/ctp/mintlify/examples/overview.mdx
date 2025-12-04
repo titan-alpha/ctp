@@ -1,0 +1,98 @@
+---
+title: 'Examples Overview'
+description: 'Reference implementations of CTP-compliant tools'
+---
+
+# Example Tools
+
+Complete reference implementations demonstrating CTP patterns.
+
+## Available Examples
+
+<CardGroup cols={2}>
+  <Card title="JSON Formatter" icon="braces" href="/examples/json-formatter">
+    Format and beautify JSON with customizable indentation
+  </Card>
+  <Card title="Base64 Encoder" icon="code" href="/examples/base64-encoder">
+    Bidirectional Base64 encoding and decoding
+  </Card>
+  <Card title="Hash Generator" icon="fingerprint" href="/examples/hash-generator">
+    Cryptographic hashing with Web Crypto API
+  </Card>
+</CardGroup>
+
+## Pattern Summary
+
+| Example | Pattern | Key Concept |
+|---------|---------|-------------|
+| JSON Formatter | Sync tool | Multiple parameters, validation |
+| Base64 Encoder | Bidirectional | Mode selection, conditional params |
+| Hash Generator | Async tool | Web Crypto, warnings in metadata |
+
+## Quick Reference
+
+### Sync Tool (JSON Formatter)
+
+```typescript
+export const jsonFormatterFn: ToolFunction<Result> = (params) => {
+  // Synchronous processing
+  const formatted = JSON.stringify(parsed, null, indent);
+  return { success: true, data: { formatted } };
+};
+```
+
+### Async Tool (Hash Generator)
+
+```typescript
+export const hashGeneratorFn: ToolFunction<Result> = async (params) => {
+  // Asynchronous - uses Web Crypto
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return { success: true, data: { hash } };
+};
+```
+
+### Bidirectional Tool (Base64)
+
+```typescript
+export const base64Fn: ToolFunction<Result> = (params) => {
+  const mode = params.mode as 'encode' | 'decode';
+  const output = mode === 'encode' ? encode(input) : decode(input);
+  return { success: true, data: { output, mode } };
+};
+```
+
+## Running Examples
+
+### Clone Repository
+
+```bash
+git clone https://github.com/titan-alpha/convenience-pro
+cd convenience-pro/packages/ctp-examples
+npm install
+```
+
+### Run Tests
+
+```bash
+npm test
+```
+
+### Try Interactively
+
+```bash
+npm run dev
+# Opens interactive tool runner
+```
+
+## Creating Your Own
+
+Use examples as templates:
+
+```typescript
+// Copy a similar example
+cp src/tools/json-formatter.ts src/tools/my-tool.ts
+
+// Modify definition and function
+// Register in src/registry.ts
+// Add tests in src/__tests__/
+```

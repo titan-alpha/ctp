@@ -1,0 +1,193 @@
+---
+title: 'Tool Definition'
+description: 'Complete schema for CTP tool definitions'
+---
+
+# Tool Definition Schema
+
+A Tool Definition is a JSON-serializable object that describes a tool's metadata, parameters, and behavior.
+
+## Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Unique identifier (lowercase, hyphen-separated) |
+| `name` | `string` | Human-readable display name (max 50 chars) |
+| `description` | `string` | Detailed description (max 500 chars) |
+| `category` | `string` | Primary category for organization |
+| `tags` | `string[]` | Searchable tags (min 1, unique) |
+| `method` | `"GET" \| "POST"` | HTTP method when exposed as API |
+| `parameters` | `Parameter[]` | Array of parameter definitions |
+| `outputDescription` | `string` | Description of tool output |
+| `example` | `object` | Example input/output |
+
+## Optional Fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `version` | `string` | - | Semantic version (e.g., "1.0.0") |
+| `icon` | `string` | - | Icon identifier or emoji |
+| `keywords` | `string[]` | - | Additional search keywords |
+| `relatedTools` | `string[]` | - | IDs of related tools |
+| `aiInstructions` | `string` | - | Special instructions for AI models |
+| `rateLimit` | `object` | - | Rate limiting configuration |
+| `executionMode` | `string` | `"client"` | Where tool executes |
+| `requiresAuth` | `boolean` | `false` | Authentication required |
+| `deprecated` | `boolean` | `false` | Deprecation status |
+| `deprecationMessage` | `string` | - | Deprecation explanation |
+
+## Categories
+
+Tools MUST belong to one of the following categories:
+
+| Category | Description | Examples |
+|----------|-------------|----------|
+| `formatters` | Format and beautify data | JSON formatter, SQL formatter |
+| `encoders` | Encode and decode data | Base64, URL encoding |
+| `generators` | Generate data or content | UUID, password, hash |
+| `converters` | Convert between formats | Unit converter, color formats |
+| `validators` | Validate data formats | JSON validator, email checker |
+| `analyzers` | Analyze and inspect data | JSON diff, regex tester |
+| `editors` | Edit and transform data | Text replacer, case converter |
+| `utilities` | General utilities | Timestamp converter |
+
+## Execution Modes
+
+| Mode | Description |
+|------|-------------|
+| `client` | Executes entirely in browser (default) |
+| `server` | Requires server-side execution |
+| `hybrid` | Can execute in either environment |
+
+## Complete Example
+
+```typescript
+import type { ToolDefinition } from '@conveniencepro/ctp-core';
+
+export const jsonFormatterDefinition: ToolDefinition = {
+  // Required fields
+  id: 'json-formatter',
+  name: 'JSON Formatter',
+  description: 'Format, validate, and beautify JSON data with customizable indentation.',
+  category: 'formatters',
+  tags: ['json', 'format', 'beautify', 'validate', 'minify'],
+  method: 'POST',
+  parameters: [
+    {
+      name: 'json',
+      type: 'textarea',
+      label: 'JSON Input',
+      description: 'The JSON string to format',
+      required: true,
+      placeholder: '{"name": "example"}',
+      validation: { minLength: 1, maxLength: 1000000 },
+    },
+    {
+      name: 'indent',
+      type: 'select',
+      label: 'Indentation',
+      description: 'Number of spaces for indentation',
+      required: false,
+      defaultValue: '2',
+      options: [
+        { value: '0', label: 'Minified' },
+        { value: '2', label: '2 spaces' },
+        { value: '4', label: '4 spaces' },
+        { value: 'tab', label: 'Tab' },
+      ],
+    },
+    {
+      name: 'sortKeys',
+      type: 'boolean',
+      label: 'Sort Keys',
+      description: 'Sort object keys alphabetically',
+      required: false,
+      defaultValue: false,
+    },
+  ],
+  outputDescription: 'Formatted JSON string',
+  example: {
+    input: { json: '{"b":2,"a":1}', indent: '2', sortKeys: true },
+    output: {
+      formatted: '{\n  "a": 1,\n  "b": 2\n}',
+      valid: true,
+      lineCount: 4,
+    },
+  },
+
+  // Optional fields
+  version: '1.0.0',
+  icon: '📋',
+  keywords: ['pretty print', 'beautifier'],
+  relatedTools: ['json-validator', 'json-minifier'],
+  aiInstructions: 'Use 2-space indentation by default. Enable sortKeys for consistent output.',
+  executionMode: 'client',
+};
+```
+
+## JSON Schema
+
+The complete JSON Schema for tool definitions is available at:
+
+```
+https://conveniencepro.cc/schemas/tool-definition.schema.json
+```
+
+<Accordion title="View JSON Schema">
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://conveniencepro.cc/schemas/tool-definition.schema.json",
+  "title": "CTP Tool Definition",
+  "type": "object",
+  "required": [
+    "id", "name", "description", "category", "tags",
+    "method", "parameters", "outputDescription", "example"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 50
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "formatters", "encoders", "generators", "converters",
+        "validators", "analyzers", "editors", "utilities"
+      ]
+    },
+    "executionMode": {
+      "type": "string",
+      "enum": ["client", "server", "hybrid"],
+      "default": "client"
+    }
+  }
+}
+```
+</Accordion>
+
+## Validation
+
+```typescript
+import { validateToolDefinition } from '@conveniencepro/ctp-core';
+
+const result = validateToolDefinition(myDefinition);
+
+if (!result.valid) {
+  result.errors.forEach(error => {
+    console.error(`${error.path}: ${error.message}`);
+  });
+}
+```

@@ -102,7 +102,7 @@ export {
 // =============================================================================
 
 import { CTP_VERSION, ToolDefinition, ToolResult, NormalizedParams } from './types';
-import { validateToolDefinition, validateParameters, ValidationResult } from './validators';
+import { validateToolDefinition, validateParameters } from './validators';
 
 /**
  * Create a validated tool definition
@@ -186,7 +186,7 @@ export function getProtocolInfo() {
     name: 'ConveniencePro Tool Protocol',
     shortName: 'CTP',
     version: CTP_VERSION,
-    specification: 'https://conveniencepro.cc/docs/ctp/spec',
-    repository: 'https://github.com/conveniencepro/convenience-pro',
+    specification: 'https://spec.conveniencepro.cc',
+    repository: 'https://github.com/titan-alpha/ctp',
   };
 }

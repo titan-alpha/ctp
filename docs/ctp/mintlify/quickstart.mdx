@@ -1,0 +1,159 @@
+---
+title: 'Quickstart'
+description: 'Create your first CTP-compliant tool in 5 minutes'
+---
+
+# Quickstart
+
+This guide will walk you through creating a CTP-compliant tool from scratch.
+
+## Installation
+
+<CodeGroup>
+
+```bash npm
+npm install @conveniencepro/ctp-core @conveniencepro/ctp-runtime
+```
+
+```bash pnpm
+pnpm add @conveniencepro/ctp-core @conveniencepro/ctp-runtime
+```
+
+```bash yarn
+yarn add @conveniencepro/ctp-core @conveniencepro/ctp-runtime
+```
+
+</CodeGroup>
+
+## Create a Tool
+
+Create a new file `my-tool.ts`:
+
+```typescript
+import type { ToolDefinition, ToolFunction } from '@conveniencepro/ctp-core';
+
+// 1. Define the tool's result type
+interface UppercaseResult {
+  result: string;
+  originalLength: number;
+}
+
+// 2. Create the tool definition
+export const uppercaseDefinition: ToolDefinition = {
+  id: 'uppercase-converter',
+  name: 'Uppercase Converter',
+  description: 'Convert text to uppercase.',
+  category: 'converters',
+  tags: ['uppercase', 'text', 'convert'],
+  method: 'POST',
+  parameters: [
+    {
+      name: 'text',
+      type: 'textarea',
+      label: 'Input Text',
+      description: 'Text to convert to uppercase',
+      required: true,
+    },
+  ],
+  outputDescription: 'Uppercase version of the input text',
+  example: {
+    input: { text: 'hello world' },
+    output: { result: 'HELLO WORLD', originalLength: 11 },
+  },
+  executionMode: 'client',
+};
+
+// 3. Implement the tool function
+export const uppercaseFn: ToolFunction<UppercaseResult> = (params) => {
+  const text = params.text as string;
+
+  if (!text) {
+    return {
+      success: false,
+      error: 'Text is required',
+      errorCode: 'MISSING_REQUIRED',
+    };
+  }
+
+  return {
+    success: true,
+    data: {
+      result: text.toUpperCase(),
+      originalLength: text.length,
+    },
+  };
+};
+
+export default { definition: uppercaseDefinition, fn: uppercaseFn };
+```
+
+## Register and Execute
+
+```typescript
+import { ToolRegistry, createRuntime } from '@conveniencepro/ctp-runtime';
+import uppercaseTool from './my-tool';
+
+// Create registry and register the tool
+const registry = new ToolRegistry();
+registry.register(uppercaseTool.definition, uppercaseTool.fn);
+
+// Create runtime
+const runtime = createRuntime(registry);
+
+// Execute the tool
+const result = await runtime.execute('uppercase-converter', {
+  text: 'hello world',
+});
+
+console.log(result);
+// {
+//   success: true,
+//   data: { result: 'HELLO WORLD', originalLength: 11 }
+// }
+```
+
+## Validate Your Tool
+
+```typescript
+import { validateToolDefinition } from '@conveniencepro/ctp-core';
+
+const validation = validateToolDefinition(uppercaseTool.definition);
+
+if (!validation.valid) {
+  console.error('Validation errors:', validation.errors);
+} else {
+  console.log('Tool is CTP-compliant!');
+}
+```
+
+## Generate Discovery Documents
+
+```typescript
+import {
+  generateOpenAPISpec,
+  generateMCPManifest
+} from '@conveniencepro/ctp-discovery';
+
+// Generate OpenAPI 3.1 specification
+const openapi = generateOpenAPISpec([uppercaseTool.definition]);
+
+// Generate MCP-compatible manifest
+const mcpManifest = generateMCPManifest([uppercaseTool.definition]);
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Tool Definition Schema" icon="file-code" href="/specification/tool-definition">
+    Learn all available definition options
+  </Card>
+  <Card title="Parameter Types" icon="input-text" href="/specification/parameters">
+    Explore all 12 parameter types
+  </Card>
+  <Card title="MCP Compliance" icon="plug" href="/specification/mcp-compliance">
+    Understand MCP compatibility
+  </Card>
+  <Card title="Full Examples" icon="code" href="/examples/overview">
+    See complete tool implementations
+  </Card>
+</CardGroup>

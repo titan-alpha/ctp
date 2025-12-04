@@ -1,0 +1,194 @@
+---
+title: 'Schema Reference'
+description: 'Compact schema reference for AI lookups'
+---
+
+# Schema Quick Reference
+
+Compact reference for CTP schemas, designed for quick AI lookups.
+
+## Tool Definition
+
+```typescript
+interface ToolDefinition {
+  // Required
+  id: string;                    // lowercase-hyphen-separated
+  name: string;                  // Display name (max 50)
+  description: string;           // What it does (max 500)
+  category: Category;            // See categories below
+  tags: string[];                // Search tags (min 1)
+  method: 'GET' | 'POST';        // HTTP method
+  parameters: Parameter[];       // Input params
+  outputDescription: string;     // Output description
+  example: { input: object; output: object };
+
+  // Optional
+  version?: string;              // Semver "1.0.0"
+  icon?: string;                 // Emoji or icon ID
+  aiInstructions?: string;       // AI guidance
+  executionMode?: 'client' | 'server' | 'hybrid';
+  requiresAuth?: boolean;
+  rateLimit?: { requests: number; window: number };
+}
+```
+
+## Parameter Types
+
+| Type | Input | Use Case |
+|------|-------|----------|
+| `text` | Single line | Short strings |
+| `textarea` | Multi-line | Long text, code |
+| `number` | Numeric | Counts, sizes |
+| `boolean` | Toggle | Flags, options |
+| `select` | Dropdown | Fixed choices |
+| `json` | JSON editor | Structured data |
+| `file` | File picker | Uploads |
+| `color` | Color picker | Colors |
+| `date` | Date picker | Dates |
+| `datetime` | DateTime | Timestamps |
+| `url` | URL input | Links |
+| `email` | Email input | Addresses |
+
+## Parameter Schema
+
+```typescript
+interface Parameter {
+  name: string;              // camelCase
+  type: ParameterType;       // See types above
+  label: string;             // Display label
+  description: string;       // Help text
+  required: boolean;
+
+  // Optional
+  defaultValue?: any;
+  placeholder?: string;
+  options?: Option[];        // For select
+  validation?: Validation;
+  dependsOn?: Dependency[];
+  aiHint?: string;
+  group?: string;
+  order?: number;
+  hidden?: boolean;
+}
+```
+
+## Categories
+
+| Category | Purpose |
+|----------|---------|
+| `formatters` | Format data (JSON, SQL, XML) |
+| `encoders` | Encode/decode (Base64, URL) |
+| `generators` | Generate (UUID, hash, password) |
+| `converters` | Convert formats (units, colors) |
+| `validators` | Validate (JSON, email, URL) |
+| `analyzers` | Analyze (diff, regex) |
+| `editors` | Transform (case, replace) |
+| `utilities` | General utilities |
+
+## Error Codes
+
+| Code | HTTP | Cause |
+|------|------|-------|
+| `INVALID_INPUT` | 400 | Bad input format |
+| `MISSING_REQUIRED` | 400 | Required param missing |
+| `TYPE_ERROR` | 400 | Wrong type |
+| `CONSTRAINT_VIOLATION` | 400 | Out of range |
+| `EXECUTION_ERROR` | 500 | Runtime error |
+| `TIMEOUT` | 504 | Too slow |
+| `RATE_LIMITED` | 429 | Too many requests |
+| `UNAUTHORIZED` | 401 | Auth required |
+
+## Result Format
+
+```typescript
+// Success
+{
+  success: true,
+  data: { /* result */ },
+  metadata?: { executionTime?: number; warnings?: string[] }
+}
+
+// Error
+{
+  success: false,
+  error: "Message",
+  errorCode: "ERROR_CODE",
+  suggestion?: "How to fix"
+}
+```
+
+## Validation Constraints
+
+```typescript
+interface Validation {
+  minLength?: number;     // String min
+  maxLength?: number;     // String max
+  pattern?: string;       // Regex pattern
+  min?: number;           // Number min
+  max?: number;           // Number max
+  step?: number;          // Number step
+  accept?: string[];      // File types
+  maxSize?: number;       // File bytes
+}
+```
+
+## Conditional Display
+
+```typescript
+dependsOn: [
+  { field: 'mode', condition: 'equals', value: 'advanced' }
+]
+```
+
+Conditions: `equals`, `notEquals`, `contains`, `exists`
+
+## Select Options
+
+```typescript
+options: [
+  { value: 'opt1', label: 'Option 1' },
+  { value: 'opt2', label: 'Option 2', description: 'With description' },
+  { value: 'opt3', label: 'Option 3', disabled: true }
+]
+```
+
+## Execution Modes
+
+| Mode | Where | Use Case |
+|------|-------|----------|
+| `client` | Browser | Most tools, privacy |
+| `server` | Node.js | File system, DB |
+| `hybrid` | Both | Flexible deployment |
+
+## Common Patterns
+
+### Sync Tool
+```typescript
+const fn: ToolFunction = (params) => {
+  return { success: true, data: result };
+};
+```
+
+### Async Tool
+```typescript
+const fn: ToolFunction = async (params) => {
+  const result = await asyncOp();
+  return { success: true, data: result };
+};
+```
+
+### With Validation
+```typescript
+if (!params.input) {
+  return { success: false, error: 'Required', errorCode: 'MISSING_REQUIRED' };
+}
+```
+
+### With Metadata
+```typescript
+return {
+  success: true,
+  data: result,
+  metadata: { executionTime: Date.now() - start }
+};
+```

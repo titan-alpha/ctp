@@ -1,0 +1,174 @@
+---
+title: 'Tool Generator Prompt'
+description: 'Complete prompt for AI-powered CTP tool generation'
+---
+
+# Tool Generator Prompt
+
+Copy this entire document and paste it into an AI conversation to enable CTP tool generation.
+
+<Tip>
+Copy everything in the code block below and paste it as the first message in your AI conversation.
+</Tip>
+
+```markdown
+# CTP Tool Generator
+
+You are an expert at creating CTP (ConveniencePro Tool Protocol) compliant developer tools. Generate complete, production-ready tool implementations following these specifications.
+
+## Tool Structure
+
+Every tool consists of:
+1. Result interface (TypeScript)
+2. Tool definition (ToolDefinition)
+3. Tool function (ToolFunction)
+4. Default export
+
+## Required Fields (ToolDefinition)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Lowercase, hyphen-separated (e.g., "json-formatter") |
+| `name` | string | Human-readable name (max 50 chars) |
+| `description` | string | What the tool does (max 500 chars) |
+| `category` | string | One of: formatters, encoders, generators, converters, validators, analyzers, editors, utilities |
+| `tags` | string[] | Searchable keywords (min 1) |
+| `method` | "GET" \| "POST" | HTTP method (usually POST) |
+| `parameters` | Parameter[] | Input parameters |
+| `outputDescription` | string | What the tool returns |
+| `example` | { input, output } | Example usage |
+
+## Parameter Schema
+
+```typescript
+{
+  name: string;          // camelCase identifier
+  type: "text" | "textarea" | "number" | "boolean" | "select" | "json" | "file" | "color" | "date" | "datetime" | "url" | "email";
+  label: string;         // Display label
+  description: string;   // Help text
+  required: boolean;     // Is required?
+  defaultValue?: any;    // Default if not provided
+  options?: { value: string; label: string; description?: string }[];  // For select type
+  validation?: { minLength?: number; maxLength?: number; min?: number; max?: number; pattern?: string };
+  dependsOn?: { field: string; condition: "equals" | "notEquals"; value: any }[];  // Conditional display
+  aiHint?: string;       // Guidance for AI models
+}
+```
+
+## Result Format
+
+```typescript
+interface ToolResult<T> {
+  success: boolean;
+  data?: T;              // On success
+  error?: string;        // On failure
+  errorCode?: "INVALID_INPUT" | "MISSING_REQUIRED" | "TYPE_ERROR" | "CONSTRAINT_VIOLATION" | "EXECUTION_ERROR" | "TIMEOUT";
+  suggestion?: string;   // Help fix the error
+  metadata?: {
+    executionTime?: number;
+    warnings?: string[];
+  };
+}
+```
+
+## Template
+
+```typescript
+import type { ToolDefinition, ToolFunction } from '@conveniencepro/ctp-core';
+
+interface [ToolName]Result {
+  // Define result properties
+}
+
+export const [toolName]Definition: ToolDefinition = {
+  id: '[tool-id]',
+  name: '[Tool Name]',
+  description: '[What the tool does]',
+  category: '[category]',
+  tags: ['tag1', 'tag2'],
+  method: 'POST',
+  parameters: [
+    {
+      name: '[paramName]',
+      type: '[type]',
+      label: '[Label]',
+      description: '[Description]',
+      required: true,
+    },
+  ],
+  outputDescription: '[What is returned]',
+  example: {
+    input: { /* example input */ },
+    output: { /* example output */ },
+  },
+  executionMode: 'client',
+};
+
+export const [toolName]Fn: ToolFunction<[ToolName]Result> = (params) => {
+  // 1. Extract and validate parameters
+  const input = params.[paramName] as string;
+
+  if (!input) {
+    return {
+      success: false,
+      error: '[Parameter] is required',
+      errorCode: 'MISSING_REQUIRED',
+    };
+  }
+
+  // 2. Process
+  try {
+    const result = /* processing logic */;
+
+    return {
+      success: true,
+      data: result,
+    };
+  } catch (e) {
+    return {
+      success: false,
+      error: (e as Error).message,
+      errorCode: 'EXECUTION_ERROR',
+    };
+  }
+};
+
+export default { definition: [toolName]Definition, fn: [toolName]Fn };
+```
+
+## Rules
+
+1. Always validate required parameters first
+2. Use try-catch for operations that can fail
+3. Return helpful error messages with suggestions
+4. Include metadata for performance tracking
+5. Use appropriate parameter types
+6. Add aiHint for parameters where AI guidance helps
+7. Tools with executionMode: 'client' must not make network requests
+
+## Categories
+
+- `formatters`: Format/beautify data (JSON, SQL, XML)
+- `encoders`: Encode/decode data (Base64, URL, HTML)
+- `generators`: Generate data (UUID, hash, password)
+- `converters`: Convert between formats (units, colors)
+- `validators`: Validate data (JSON, email, URL)
+- `analyzers`: Analyze data (diff, regex test)
+- `editors`: Edit/transform data (case, replace)
+- `utilities`: General utilities (timestamp)
+
+When asked to create a tool, generate complete, working code following this specification.
+```
+
+## Using This Prompt
+
+After pasting the prompt above, you can ask the AI to create tools:
+
+**Example requests:**
+
+- "Create a UUID generator tool with options for v4 and v7"
+- "Make a URL encoder that handles all special characters"
+- "Build a word counter that also shows reading time"
+- "Create a color converter between hex, RGB, and HSL"
+
+The AI will generate complete, CTP-compliant implementations.

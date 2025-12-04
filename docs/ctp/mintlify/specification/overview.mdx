@@ -1,0 +1,80 @@
+---
+title: 'Specification Overview'
+description: 'ConveniencePro Tool Protocol (CTP) Version 1.0.0'
+---
+
+# CTP Specification Overview
+
+**Version:** 1.0.0
+**Status:** Stable
+**License:** MIT
+
+## Abstract
+
+The ConveniencePro Tool Protocol (CTP) defines a standardized interface for creating, discovering, and executing browser-native developer tools. CTP enables tools to operate entirely within web browsers while maintaining compatibility with AI-powered development environments through the Model Context Protocol (MCP).
+
+## Conformance
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this specification are to be interpreted as described in [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119).
+
+## Design Goals
+
+1. **Browser-Native Execution**: Tools SHOULD execute entirely in the browser using Web APIs
+2. **MCP Compatibility**: Tools MUST be convertible to MCP format for AI integration
+3. **Type Safety**: All interfaces MUST be fully typed with TypeScript
+4. **Discoverability**: Tools MUST support multiple discovery mechanisms
+5. **Embeddability**: Tools SHOULD be embeddable in any web page
+6. **Privacy**: Client-executed tools MUST NOT send data to external servers
+
+## Core Concepts
+
+### Tool Definition
+
+A **Tool Definition** describes a tool's metadata, parameters, and behavior. It is a static JSON-serializable object that conforms to the [Tool Definition Schema](/specification/tool-definition).
+
+### Tool Function
+
+A **Tool Function** is the executable implementation that processes parameters and returns a [Tool Result](/specification/results).
+
+### Tool Registry
+
+A **Tool Registry** maintains a collection of registered tools and provides lookup and execution capabilities.
+
+### Discovery Documents
+
+**Discovery Documents** expose tools to external systems through standardized formats (OpenAPI, MCP, llms.txt).
+
+## Specification Sections
+
+<CardGroup cols={2}>
+  <Card title="Tool Definition" icon="file-code" href="/specification/tool-definition">
+    Complete schema for defining tools
+  </Card>
+  <Card title="Parameters" icon="input-text" href="/specification/parameters">
+    All 12 parameter types and validation
+  </Card>
+  <Card title="Execution" icon="play" href="/specification/execution">
+    Client, server, and hybrid execution modes
+  </Card>
+  <Card title="Results" icon="check" href="/specification/results">
+    Result format and error codes
+  </Card>
+  <Card title="Discovery" icon="magnifying-glass" href="/specification/discovery">
+    OpenAPI, MCP, and llms.txt generation
+  </Card>
+  <Card title="Embedding" icon="window" href="/specification/embedding">
+    Widget embedding and autosense
+  </Card>
+  <Card title="Security" icon="shield" href="/specification/security">
+    Security requirements and best practices
+  </Card>
+  <Card title="MCP Compliance" icon="plug" href="/specification/mcp-compliance">
+    Model Context Protocol compatibility
+  </Card>
+</CardGroup>
+
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0.0 | 2024 | Initial stable release |

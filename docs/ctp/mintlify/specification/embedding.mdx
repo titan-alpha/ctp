@@ -1,0 +1,282 @@
+---
+title: 'Embedding'
+description: 'Widget embedding and autosense styling'
+---
+
+# Embedding Tools
+
+CTP tools can be embedded in any web page using the SDK.
+
+## Quick Start
+
+```html
+<!-- Add the SDK -->
+<script src="https://cdn.conveniencepro.cc/sdk/v1/ctp-sdk.min.js"></script>
+
+<!-- Embed a tool -->
+<div data-ctp-tool="json-formatter"></div>
+
+<!-- Initialize -->
+<script>
+  CTP.init({ autosense: true });
+</script>
+```
+
+## SDK Installation
+
+### CDN
+
+```html
+<script src="https://cdn.conveniencepro.cc/sdk/v1/ctp-sdk.min.js"></script>
+```
+
+### npm
+
+```bash
+npm install @conveniencepro/ctp-sdk
+```
+
+```typescript
+import { CTP } from '@conveniencepro/ctp-sdk';
+
+CTP.init({ autosense: true });
+```
+
+## Embedding Methods
+
+### Declarative (Data Attributes)
+
+```html
+<!-- Basic embed -->
+<div data-ctp-tool="json-formatter"></div>
+
+<!-- With default values -->
+<div
+  data-ctp-tool="json-formatter"
+  data-ctp-indent="4"
+  data-ctp-sortKeys="true"
+></div>
+
+<!-- Hidden parameters -->
+<div
+  data-ctp-tool="base64-encoder"
+  data-ctp-mode="encode"
+  data-ctp-hide="mode"
+></div>
+```
+
+### Programmatic
+
+```typescript
+import { CTP } from '@conveniencepro/ctp-sdk';
+
+// Render to container
+CTP.render('json-formatter', document.getElementById('container'), {
+  defaults: { indent: '4', sortKeys: true },
+  hide: ['sortKeys'],
+  theme: 'dark',
+});
+
+// Create standalone instance
+const tool = CTP.create('json-formatter', {
+  onResult: (result) => console.log(result),
+  onError: (error) => console.error(error),
+});
+
+document.getElementById('container').appendChild(tool.element);
+```
+
+## Configuration Options
+
+```typescript
+interface EmbedConfig {
+  // Tool configuration
+  toolId: string;
+  defaults?: Record<string, unknown>;
+  hide?: string[];          // Parameters to hide
+
+  // Appearance
+  theme?: 'light' | 'dark' | 'auto' | 'inherit';
+  compact?: boolean;        // Compact mode
+  showHeader?: boolean;     // Show tool header
+  showFooter?: boolean;     // Show footer/branding
+
+  // Behavior
+  autoSubmit?: boolean;     // Submit on input change
+  debounce?: number;        // Debounce delay (ms)
+  validateOnChange?: boolean;
+
+  // Callbacks
+  onResult?: (result: ToolResult) => void;
+  onError?: (error: Error) => void;
+  onChange?: (params: Record<string, unknown>) => void;
+}
+```
+
+## Autosense
+
+Autosense automatically detects and matches the host page's styling framework.
+
+### Supported Frameworks
+
+| Framework | Detection | Styling |
+|-----------|-----------|---------|
+| Tailwind CSS | Class patterns | Native Tailwind classes |
+| Bootstrap | CSS variables | Bootstrap utilities |
+| Chakra UI | CSS variables | Chakra tokens |
+| Material UI | Theme provider | MUI styling |
+| shadcn/ui | CSS variables | shadcn components |
+| None | Fallback | Built-in neutral theme |
+
+### How It Works
+
+```typescript
+CTP.init({
+  autosense: true,  // Enable automatic detection
+});
+```
+
+The SDK:
+1. Scans the page for framework indicators
+2. Detects CSS variables and class patterns
+3. Applies matching styling tokens
+4. Falls back to neutral theme if undetected
+
+### Manual Override
+
+```typescript
+CTP.init({
+  autosense: false,
+  theme: {
+    framework: 'tailwind',
+    colors: {
+      primary: '#6366f1',
+      background: '#ffffff',
+      text: '#1f2937',
+    },
+    borderRadius: '0.5rem',
+  },
+});
+```
+
+## Theme Configuration
+
+### Using CSS Variables
+
+```css
+:root {
+  --ctp-primary: #6366f1;
+  --ctp-primary-hover: #4f46e5;
+  --ctp-background: #ffffff;
+  --ctp-surface: #f9fafb;
+  --ctp-text: #1f2937;
+  --ctp-text-muted: #6b7280;
+  --ctp-border: #e5e7eb;
+  --ctp-radius: 0.5rem;
+  --ctp-font-family: system-ui, sans-serif;
+  --ctp-font-mono: ui-monospace, monospace;
+}
+```
+
+### Dark Mode
+
+```typescript
+CTP.init({
+  theme: 'dark', // or 'auto' for system preference
+});
+```
+
+```css
+[data-ctp-theme="dark"] {
+  --ctp-background: #1f2937;
+  --ctp-surface: #374151;
+  --ctp-text: #f9fafb;
+  --ctp-border: #4b5563;
+}
+```
+
+## Event Handling
+
+```typescript
+const tool = CTP.create('json-formatter', {
+  onResult: (result) => {
+    if (result.success) {
+      console.log('Formatted:', result.data.formatted);
+    } else {
+      console.error('Error:', result.error);
+    }
+  },
+  onChange: (params) => {
+    console.log('Parameters changed:', params);
+  },
+});
+
+// Programmatic execution
+tool.execute({ json: '{"test":true}' });
+
+// Get current values
+const currentParams = tool.getParams();
+
+// Reset to defaults
+tool.reset();
+
+// Destroy instance
+tool.destroy();
+```
+
+## Iframe Embedding
+
+For complete isolation:
+
+```html
+<iframe
+  src="https://conveniencepro.cc/embed/json-formatter"
+  width="100%"
+  height="400"
+  frameborder="0"
+></iframe>
+```
+
+### PostMessage Communication
+
+```typescript
+// Parent page
+const iframe = document.querySelector('iframe');
+
+// Send parameters
+iframe.contentWindow.postMessage({
+  type: 'ctp:setParams',
+  params: { json: '{"test":true}' },
+}, 'https://conveniencepro.cc');
+
+// Receive results
+window.addEventListener('message', (event) => {
+  if (event.origin !== 'https://conveniencepro.cc') return;
+
+  if (event.data.type === 'ctp:result') {
+    console.log('Result:', event.data.result);
+  }
+});
+```
+
+## Responsive Behavior
+
+The SDK automatically adjusts for different viewport sizes:
+
+```css
+/* Compact mode on small screens */
+@media (max-width: 640px) {
+  [data-ctp-embed] {
+    --ctp-compact: true;
+  }
+}
+```
+
+```typescript
+CTP.init({
+  responsive: {
+    compact: 640,  // Compact mode below 640px
+    stack: 480,    // Stack layout below 480px
+  },
+});
+```

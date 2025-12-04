@@ -1,0 +1,292 @@
+---
+title: 'Parameters'
+description: 'All 12 parameter types and validation constraints'
+---
+
+# Parameter Types
+
+CTP supports 12 distinct parameter types for tool inputs.
+
+## Parameter Schema
+
+Every parameter MUST include these required fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | `string` | Identifier (camelCase, max 50 chars) |
+| `type` | `string` | One of the 12 parameter types |
+| `label` | `string` | Display label (max 50 chars) |
+| `description` | `string` | Help text (max 200 chars) |
+| `required` | `boolean` | Whether parameter is required |
+
+### Optional Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `defaultValue` | `any` | Default if not provided |
+| `placeholder` | `string` | Placeholder text |
+| `options` | `Option[]` | For `select` type |
+| `validation` | `object` | Validation constraints |
+| `dependsOn` | `Rule[]` | Conditional display rules |
+| `group` | `string` | UI grouping identifier |
+| `order` | `number` | Display order |
+| `hidden` | `boolean` | Hide in UI |
+| `aiHint` | `string` | Guidance for AI models |
+
+## Available Types
+
+### Text Input Types
+
+<AccordionGroup>
+  <Accordion title="text - Single-line text">
+    ```typescript
+    {
+      name: 'username',
+      type: 'text',
+      label: 'Username',
+      description: 'Your username',
+      required: true,
+      placeholder: 'john_doe',
+      validation: {
+        minLength: 3,
+        maxLength: 20,
+        pattern: '^[a-z0-9_]+$'
+      }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="textarea - Multi-line text">
+    ```typescript
+    {
+      name: 'content',
+      type: 'textarea',
+      label: 'Content',
+      description: 'Text content to process',
+      required: true,
+      validation: {
+        minLength: 1,
+        maxLength: 100000
+      }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="url - URL input with validation">
+    ```typescript
+    {
+      name: 'website',
+      type: 'url',
+      label: 'Website URL',
+      description: 'Full URL including protocol',
+      required: false,
+      placeholder: 'https://example.com'
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="email - Email input with validation">
+    ```typescript
+    {
+      name: 'email',
+      type: 'email',
+      label: 'Email Address',
+      description: 'Your email address',
+      required: true
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Numeric Types
+
+<AccordionGroup>
+  <Accordion title="number - Numeric input">
+    ```typescript
+    {
+      name: 'quantity',
+      type: 'number',
+      label: 'Quantity',
+      description: 'Number of items',
+      required: true,
+      defaultValue: 1,
+      validation: {
+        min: 1,
+        max: 100,
+        step: 1
+      }
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Selection Types
+
+<AccordionGroup>
+  <Accordion title="boolean - Toggle/checkbox">
+    ```typescript
+    {
+      name: 'enabled',
+      type: 'boolean',
+      label: 'Enable Feature',
+      description: 'Toggle this feature on or off',
+      required: false,
+      defaultValue: false
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="select - Dropdown selection">
+    ```typescript
+    {
+      name: 'format',
+      type: 'select',
+      label: 'Output Format',
+      description: 'Select the output format',
+      required: false,
+      defaultValue: 'json',
+      options: [
+        { value: 'json', label: 'JSON' },
+        { value: 'xml', label: 'XML' },
+        { value: 'yaml', label: 'YAML', description: 'Human-readable' },
+        { value: 'csv', label: 'CSV', disabled: true }
+      ]
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Data Types
+
+<AccordionGroup>
+  <Accordion title="json - JSON object input">
+    ```typescript
+    {
+      name: 'config',
+      type: 'json',
+      label: 'Configuration',
+      description: 'JSON configuration object',
+      required: true,
+      placeholder: '{"key": "value"}'
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="file - File upload">
+    ```typescript
+    {
+      name: 'document',
+      type: 'file',
+      label: 'Upload File',
+      description: 'Select a file to upload',
+      required: true,
+      validation: {
+        accept: ['.json', '.txt', 'application/json'],
+        maxSize: 5242880 // 5MB
+      }
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Specialized Types
+
+<AccordionGroup>
+  <Accordion title="color - Color picker">
+    ```typescript
+    {
+      name: 'backgroundColor',
+      type: 'color',
+      label: 'Background Color',
+      description: 'Select a background color',
+      required: false,
+      defaultValue: '#ffffff'
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="date - Date picker">
+    ```typescript
+    {
+      name: 'startDate',
+      type: 'date',
+      label: 'Start Date',
+      description: 'Select a date',
+      required: true
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="datetime - Date and time picker">
+    ```typescript
+    {
+      name: 'scheduledAt',
+      type: 'datetime',
+      label: 'Schedule Time',
+      description: 'Select date and time',
+      required: true
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Validation Constraints
+
+| Constraint | Applies To | Description |
+|------------|------------|-------------|
+| `minLength` | text, textarea | Minimum character count |
+| `maxLength` | text, textarea | Maximum character count |
+| `pattern` | text | Regex pattern to match |
+| `min` | number | Minimum numeric value |
+| `max` | number | Maximum numeric value |
+| `step` | number | Valid step increment |
+| `accept` | file | Accepted MIME types |
+| `maxSize` | file | Maximum file size (bytes) |
+
+```typescript
+validation: {
+  minLength: 1,
+  maxLength: 1000,
+  pattern: '^[A-Za-z0-9]+$'
+}
+```
+
+## Conditional Parameters
+
+Use `dependsOn` to show/hide parameters based on other values:
+
+```typescript
+{
+  name: 'customFormat',
+  type: 'text',
+  label: 'Custom Format',
+  description: 'Specify custom format string',
+  required: true,
+  dependsOn: [
+    { field: 'format', condition: 'equals', value: 'custom' }
+  ]
+}
+```
+
+### Condition Types
+
+| Condition | Description |
+|-----------|-------------|
+| `equals` | Field equals specified value |
+| `notEquals` | Field does not equal value |
+| `contains` | Field contains substring |
+| `exists` | Field has any value |
+
+## AI Hints
+
+Guide AI models with the `aiHint` field:
+
+```typescript
+{
+  name: 'algorithm',
+  type: 'select',
+  label: 'Algorithm',
+  // ...
+  aiHint: 'Use SHA-256 for general purposes, SHA-512 for maximum security'
+}
+```

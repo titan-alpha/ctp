@@ -1,0 +1,266 @@
+---
+title: 'Discovery Documents'
+description: 'Generate OpenAPI, MCP, and llms.txt from your tools'
+---
+
+# Discovery Documents
+
+Generate discovery documents to make your tools discoverable.
+
+## Installation
+
+```bash
+npm install @conveniencepro/ctp-discovery
+```
+
+## OpenAPI Specification
+
+Generate OpenAPI 3.1 documentation:
+
+```typescript
+import { generateOpenAPISpec } from '@conveniencepro/ctp-discovery';
+
+const tools = [jsonFormatter, base64Encoder, hashGenerator];
+
+const spec = generateOpenAPISpec(tools, {
+  info: {
+    title: 'My Tools API',
+    version: '1.0.0',
+    description: 'A collection of developer tools',
+    contact: {
+      name: 'API Support',
+      email: 'support@example.com',
+    },
+  },
+  servers: [
+    { url: 'https://api.example.com/v1', description: 'Production' },
+    { url: 'http://localhost:3000/v1', description: 'Development' },
+  ],
+});
+```
+
+### Serve OpenAPI
+
+```typescript
+// Express.js
+app.get('/openapi.json', (req, res) => {
+  res.json(generateOpenAPISpec(registry.getDefinitions()));
+});
+
+// Static file
+import { writeFileSync } from 'fs';
+writeFileSync('public/openapi.json', JSON.stringify(spec, null, 2));
+```
+
+### Use with Swagger UI
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist/swagger-ui.css">
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist/swagger-ui-bundle.js"></script>
+  <script>
+    SwaggerUIBundle({
+      url: '/openapi.json',
+      dom_id: '#swagger-ui',
+    });
+  </script>
+</body>
+</html>
+```
+
+## MCP Manifest
+
+Generate Model Context Protocol manifests:
+
+```typescript
+import { generateMCPManifest } from '@conveniencepro/ctp-discovery';
+
+const manifest = generateMCPManifest(tools, {
+  name: 'my-tools',
+  version: '1.0.0',
+  description: 'Developer tools for everyday tasks',
+});
+```
+
+### Serve MCP Manifest
+
+Standard location is `/.well-known/mcp.json`:
+
+```typescript
+app.get('/.well-known/mcp.json', (req, res) => {
+  res.json(generateMCPManifest(registry.getDefinitions(), {
+    name: 'my-tools',
+    version: '1.0.0',
+  }));
+});
+```
+
+### Claude Desktop Integration
+
+Add to Claude Desktop config:
+
+```json
+{
+  "mcpServers": {
+    "my-tools": {
+      "command": "node",
+      "args": ["path/to/mcp-server.js"]
+    }
+  }
+}
+```
+
+## llms.txt
+
+Generate context documents for LLMs:
+
+```typescript
+import { generateLlmsTxt } from '@conveniencepro/ctp-discovery';
+
+const llmsTxt = generateLlmsTxt(tools, {
+  name: 'My Tools',
+  baseUrl: 'https://example.com',
+  includeExamples: true,
+});
+```
+
+### Serve llms.txt
+
+```typescript
+app.get('/llms.txt', (req, res) => {
+  res.type('text/plain').send(
+    generateLlmsTxt(registry.getDefinitions())
+  );
+});
+```
+
+## CTP Manifest
+
+Native CTP discovery format:
+
+```typescript
+import { generateCTPManifest } from '@conveniencepro/ctp-discovery';
+
+const manifest = generateCTPManifest(tools, {
+  name: 'my-tools',
+  version: '1.0.0',
+  baseUrl: 'https://api.example.com',
+  homepage: 'https://example.com',
+});
+```
+
+### Structure
+
+```json
+{
+  "$schema": "https://conveniencepro.cc/schemas/ctp-manifest.schema.json",
+  "version": "1.0.0",
+  "name": "my-tools",
+  "baseUrl": "https://api.example.com",
+  "tools": [
+    {
+      "id": "json-formatter",
+      "path": "/tools/json-formatter",
+      "definition": { /* ... */ }
+    }
+  ],
+  "categories": ["formatters", "encoders"],
+  "generatedAt": "2024-01-15T12:00:00Z"
+}
+```
+
+## ChatGPT Plugin
+
+Generate ChatGPT plugin manifest:
+
+```typescript
+import { generateChatGPTPlugin } from '@conveniencepro/ctp-discovery';
+
+const plugin = generateChatGPTPlugin(tools, {
+  nameForHuman: 'My Developer Tools',
+  nameForModel: 'my_tools',
+  descriptionForHuman: 'A collection of developer utilities',
+  descriptionForModel: 'Tools for formatting, encoding, and generating data',
+  auth: { type: 'none' },
+  contactEmail: 'support@example.com',
+  legalInfoUrl: 'https://example.com/legal',
+});
+```
+
+### Serve Plugin Manifest
+
+```typescript
+app.get('/.well-known/ai-plugin.json', (req, res) => {
+  res.json(generateChatGPTPlugin(tools, config));
+});
+```
+
+## Build-Time Generation
+
+Generate all documents at build time:
+
+```typescript
+// scripts/generate-discovery.ts
+import { writeFileSync, mkdirSync } from 'fs';
+import {
+  generateOpenAPISpec,
+  generateMCPManifest,
+  generateLlmsTxt,
+  generateCTPManifest,
+} from '@conveniencepro/ctp-discovery';
+import { registry } from '../src/registry';
+
+const tools = registry.getDefinitions();
+const outDir = 'public/.well-known';
+
+mkdirSync(outDir, { recursive: true });
+
+// Generate all formats
+writeFileSync(
+  'public/openapi.json',
+  JSON.stringify(generateOpenAPISpec(tools), null, 2)
+);
+
+writeFileSync(
+  `${outDir}/mcp.json`,
+  JSON.stringify(generateMCPManifest(tools, { name: 'my-tools' }), null, 2)
+);
+
+writeFileSync(
+  'public/llms.txt',
+  generateLlmsTxt(tools)
+);
+
+writeFileSync(
+  `${outDir}/ctp.json`,
+  JSON.stringify(generateCTPManifest(tools, { name: 'my-tools' }), null, 2)
+);
+
+console.log('Discovery documents generated!');
+```
+
+Add to `package.json`:
+
+```json
+{
+  "scripts": {
+    "generate:discovery": "ts-node scripts/generate-discovery.ts",
+    "build": "npm run generate:discovery && vite build"
+  }
+}
+```
+
+## Recommended URLs
+
+| Path | Format | Purpose |
+|------|--------|---------|
+| `/openapi.json` | OpenAPI 3.1 | API documentation |
+| `/.well-known/mcp.json` | MCP | AI tool discovery |
+| `/.well-known/ctp.json` | CTP | Native discovery |
+| `/.well-known/ai-plugin.json` | ChatGPT | Plugin manifest |
+| `/llms.txt` | Text | LLM context |

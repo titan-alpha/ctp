@@ -1,0 +1,240 @@
+---
+title: 'Getting Started'
+description: 'Set up your development environment for CTP tools'
+---
+
+# Getting Started
+
+This guide walks you through setting up a CTP tool development environment.
+
+## Prerequisites
+
+- Node.js 18+ or 20+
+- npm, pnpm, or yarn
+- TypeScript 5.0+
+
+## Project Setup
+
+### 1. Create a New Project
+
+```bash
+mkdir my-ctp-tools
+cd my-ctp-tools
+npm init -y
+```
+
+### 2. Install Dependencies
+
+<CodeGroup>
+
+```bash npm
+npm install @conveniencepro/ctp-core @conveniencepro/ctp-runtime
+npm install -D typescript @types/node
+```
+
+```bash pnpm
+pnpm add @conveniencepro/ctp-core @conveniencepro/ctp-runtime
+pnpm add -D typescript @types/node
+```
+
+</CodeGroup>
+
+### 3. Configure TypeScript
+
+Create `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src/**/*"]
+}
+```
+
+### 4. Project Structure
+
+```
+my-ctp-tools/
+├── src/
+│   ├── tools/
+│   │   ├── my-tool.ts
+│   │   └── another-tool.ts
+│   ├── registry.ts
+│   └── index.ts
+├── package.json
+└── tsconfig.json
+```
+
+## Create Your First Tool
+
+Create `src/tools/text-reverser.ts`:
+
+```typescript
+import type { ToolDefinition, ToolFunction } from '@conveniencepro/ctp-core';
+
+// Define the result type
+interface TextReverserResult {
+  reversed: string;
+  originalLength: number;
+  isPalindrome: boolean;
+}
+
+// Tool definition
+export const textReverserDefinition: ToolDefinition = {
+  id: 'text-reverser',
+  name: 'Text Reverser',
+  description: 'Reverse any text string and check if it is a palindrome.',
+  category: 'editors',
+  tags: ['text', 'reverse', 'palindrome', 'string'],
+  method: 'POST',
+  parameters: [
+    {
+      name: 'text',
+      type: 'textarea',
+      label: 'Input Text',
+      description: 'Text to reverse',
+      required: true,
+      placeholder: 'Enter text to reverse...',
+    },
+    {
+      name: 'ignoreSpaces',
+      type: 'boolean',
+      label: 'Ignore Spaces',
+      description: 'Ignore spaces when checking for palindrome',
+      required: false,
+      defaultValue: false,
+    },
+  ],
+  outputDescription: 'Reversed text with palindrome detection',
+  example: {
+    input: { text: 'hello', ignoreSpaces: false },
+    output: { reversed: 'olleh', originalLength: 5, isPalindrome: false },
+  },
+  executionMode: 'client',
+};
+
+// Tool implementation
+export const textReverserFn: ToolFunction<TextReverserResult> = (params) => {
+  const text = params.text as string;
+  const ignoreSpaces = params.ignoreSpaces === true;
+
+  if (!text) {
+    return {
+      success: false,
+      error: 'Text is required',
+      errorCode: 'MISSING_REQUIRED',
+    };
+  }
+
+  const reversed = text.split('').reverse().join('');
+
+  // Check palindrome
+  const normalizedOriginal = ignoreSpaces
+    ? text.toLowerCase().replace(/\s/g, '')
+    : text.toLowerCase();
+  const normalizedReversed = ignoreSpaces
+    ? reversed.toLowerCase().replace(/\s/g, '')
+    : reversed.toLowerCase();
+
+  return {
+    success: true,
+    data: {
+      reversed,
+      originalLength: text.length,
+      isPalindrome: normalizedOriginal === normalizedReversed,
+    },
+  };
+};
+
+export default {
+  definition: textReverserDefinition,
+  fn: textReverserFn,
+};
+```
+
+## Register Tools
+
+Create `src/registry.ts`:
+
+```typescript
+import { ToolRegistry } from '@conveniencepro/ctp-runtime';
+import textReverser from './tools/text-reverser';
+
+// Create registry
+export const registry = new ToolRegistry();
+
+// Register tools
+registry.register(textReverser.definition, textReverser.fn);
+
+// Export for use
+export default registry;
+```
+
+## Test Your Tool
+
+Create `src/index.ts`:
+
+```typescript
+import { createRuntime } from '@conveniencepro/ctp-runtime';
+import registry from './registry';
+
+// Create runtime
+const runtime = createRuntime(registry);
+
+// Test execution
+async function main() {
+  const result = await runtime.execute('text-reverser', {
+    text: 'race car',
+    ignoreSpaces: true,
+  });
+
+  console.log('Result:', JSON.stringify(result, null, 2));
+}
+
+main();
+```
+
+Run with:
+
+```bash
+npx ts-node src/index.ts
+```
+
+Expected output:
+
+```json
+{
+  "success": true,
+  "data": {
+    "reversed": "rac ecar",
+    "originalLength": 8,
+    "isPalindrome": true
+  }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Creating Tools" icon="hammer" href="/implementation/creating-tools">
+    Learn tool creation patterns
+  </Card>
+  <Card title="Validation" icon="shield-check" href="/implementation/validation">
+    Input and output validation
+  </Card>
+  <Card title="Discovery Docs" icon="magnifying-glass" href="/implementation/discovery-docs">
+    Generate OpenAPI and MCP manifests
+  </Card>
+  <Card title="View Examples" icon="code" href="/examples/overview">
+    Reference implementations
+  </Card>
+</CardGroup>

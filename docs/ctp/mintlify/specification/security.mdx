@@ -1,0 +1,281 @@
+---
+title: 'Security'
+description: 'Security requirements and best practices'
+---
+
+# Security
+
+CTP defines security requirements to ensure safe tool execution.
+
+## Core Principles
+
+<CardGroup cols={2}>
+  <Card title="Client Privacy" icon="eye-slash">
+    Client-executed tools MUST NOT transmit input data to external servers
+  </Card>
+  <Card title="Input Validation" icon="shield-check">
+    All inputs MUST be validated before processing
+  </Card>
+  <Card title="Safe Defaults" icon="lock">
+    Default configurations MUST be secure
+  </Card>
+  <Card title="Fail Secure" icon="circle-exclamation">
+    Errors MUST NOT expose sensitive information
+  </Card>
+</CardGroup>
+
+## Privacy Requirements
+
+### Client-Mode Tools
+
+Tools with `executionMode: 'client'` MUST:
+
+1. Execute entirely in the browser
+2. NOT make network requests with user data
+3. NOT use tracking or analytics on input
+4. NOT persist input data beyond the session
+
+```typescript
+// ✅ Correct: Pure client-side processing
+export const hashFn: ToolFunction = async (params) => {
+  const data = new TextEncoder().encode(params.input as string);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return { success: true, data: { hash: arrayToHex(hash) } };
+};
+
+// ❌ Wrong: Sending data to external server
+export const hashFn: ToolFunction = async (params) => {
+  // VIOLATION: Transmitting user input
+  const response = await fetch('https://api.example.com/hash', {
+    method: 'POST',
+    body: JSON.stringify({ input: params.input }),
+  });
+  return { success: true, data: await response.json() };
+};
+```
+
+### Server-Mode Tools
+
+Tools with `executionMode: 'server'`:
+
+1. MUST document what data is transmitted
+2. SHOULD use HTTPS for all requests
+3. MUST handle credentials securely
+4. SHOULD implement rate limiting
+
+## Input Validation
+
+### Required Validation
+
+All tools MUST validate:
+
+1. **Required fields** - Presence of required parameters
+2. **Type checking** - Parameters match expected types
+3. **Constraints** - Values within allowed ranges
+4. **Sanitization** - Dangerous content neutralized
+
+```typescript
+export const myFn: ToolFunction = (params) => {
+  const input = params.input;
+
+  // 1. Required check
+  if (!input) {
+    return {
+      success: false,
+      error: 'Input is required',
+      errorCode: 'MISSING_REQUIRED',
+    };
+  }
+
+  // 2. Type check
+  if (typeof input !== 'string') {
+    return {
+      success: false,
+      error: 'Input must be a string',
+      errorCode: 'TYPE_ERROR',
+    };
+  }
+
+  // 3. Constraint check
+  if (input.length > 100000) {
+    return {
+      success: false,
+      error: 'Input exceeds maximum length of 100,000 characters',
+      errorCode: 'CONSTRAINT_VIOLATION',
+    };
+  }
+
+  // 4. Process safely
+  return { success: true, data: process(input) };
+};
+```
+
+### Validation Constraints
+
+```typescript
+{
+  name: 'input',
+  type: 'textarea',
+  validation: {
+    minLength: 1,
+    maxLength: 100000,
+    pattern: '^[\\s\\S]*$',  // Safe pattern
+  },
+}
+```
+
+## Output Security
+
+### Safe Error Messages
+
+```typescript
+// ✅ Correct: Generic error message
+return {
+  success: false,
+  error: 'Invalid input format',
+  errorCode: 'INVALID_INPUT',
+};
+
+// ❌ Wrong: Exposing internal details
+return {
+  success: false,
+  error: `Database error: ${dbError.message} at ${dbError.stack}`,
+  errorCode: 'INTERNAL_ERROR',
+};
+```
+
+### Sanitize Output
+
+When generating HTML or code:
+
+```typescript
+// Escape HTML entities
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+```
+
+## Embedding Security
+
+### Content Security Policy
+
+Recommended CSP for embedded tools:
+
+```
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' https://cdn.conveniencepro.cc;
+  style-src 'self' 'unsafe-inline';
+  connect-src 'self';
+  frame-ancestors 'self' https://*.yourdomain.com;
+```
+
+### Iframe Sandboxing
+
+```html
+<iframe
+  src="https://conveniencepro.cc/embed/tool"
+  sandbox="allow-scripts allow-forms"
+  referrerpolicy="no-referrer"
+></iframe>
+```
+
+### Cross-Origin Communication
+
+```typescript
+// Validate message origin
+window.addEventListener('message', (event) => {
+  // Always check origin
+  if (!trustedOrigins.includes(event.origin)) {
+    return;
+  }
+
+  // Validate message structure
+  if (!isValidCTPMessage(event.data)) {
+    return;
+  }
+
+  handleMessage(event.data);
+});
+```
+
+## Rate Limiting
+
+### Definition
+
+```typescript
+export const myDefinition: ToolDefinition = {
+  // ...
+  rateLimit: {
+    requests: 100,   // Max requests
+    window: 60,      // Per 60 seconds
+  },
+};
+```
+
+### Runtime Enforcement
+
+```typescript
+import { RateLimiter } from '@conveniencepro/ctp-runtime';
+
+const limiter = new RateLimiter({
+  requests: 100,
+  window: 60,
+});
+
+const result = await limiter.check('user-id');
+if (!result.allowed) {
+  return {
+    success: false,
+    error: `Rate limit exceeded. Try again in ${result.retryAfter} seconds.`,
+    errorCode: 'RATE_LIMITED',
+  };
+}
+```
+
+## Authentication
+
+For tools requiring authentication:
+
+```typescript
+export const myDefinition: ToolDefinition = {
+  // ...
+  requiresAuth: true,
+};
+
+export const myFn: ToolFunction = async (params, context) => {
+  // Check authentication
+  if (!context?.userId) {
+    return {
+      success: false,
+      error: 'Authentication required',
+      errorCode: 'UNAUTHORIZED',
+    };
+  }
+
+  // Proceed with authenticated user
+  return executeForUser(context.userId, params);
+};
+```
+
+## Security Checklist
+
+<Accordion title="Pre-Launch Security Checklist">
+- [ ] All inputs validated before processing
+- [ ] Required parameters enforced
+- [ ] Type checking implemented
+- [ ] Constraint validation (min/max lengths, ranges)
+- [ ] Error messages don't expose internals
+- [ ] Client tools don't transmit user data
+- [ ] Rate limiting configured
+- [ ] Authentication enforced where required
+- [ ] Output properly escaped/sanitized
+- [ ] CSP headers configured for embedding
+- [ ] HTTPS used for all external requests
+- [ ] Dependencies audited for vulnerabilities
+</Accordion>

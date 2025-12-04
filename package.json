@@ -1,23 +1,22 @@
 {
-  "name": "convenience-pro",
+  "name": "ctp",
   "version": "1.0.0",
   "private": true,
-  "description": "ConveniencePro monorepo - Browser-native utility tools and the ConveniencePro Tool Protocol (CTP)",
+  "description": "ConveniencePro Tool Protocol (CTP) - Open specification for browser-native developer tools",
   "workspaces": [
-    "packages/*",
-    "convenience-pro-website/utility-tools-website"
+    "packages/*"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "build:packages": "npm run build --workspace=packages/ctp-core --workspace=packages/ctp-runtime --workspace=packages/ctp-discovery --workspace=packages/ctp-sdk",
+    "build:packages": "npm run build --workspace=packages/ctp-core --workspace=packages/ctp-runtime --workspace=packages/ctp-discovery --workspace=packages/ctp-sdk --workspace=packages/ctp-spec --workspace=packages/ctp-examples",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "clean": "npm run clean --workspaces --if-present && rm -rf node_modules",
-    "dev": "npm run dev --workspace=convenience-pro-website/utility-tools-website"
+    "publish:all": "npm publish --workspaces --access public"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/conveniencepro/convenience-pro.git"
+    "url": "https://github.com/titan-alpha/ctp.git"
   },
   "keywords": [
     "conveniencepro",

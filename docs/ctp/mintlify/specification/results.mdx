@@ -1,0 +1,245 @@
+---
+title: 'Results'
+description: 'Tool result format and error codes'
+---
+
+# Tool Results
+
+All CTP tool functions return a standardized result object.
+
+## Result Structure
+
+```typescript
+interface ToolResult<T = unknown> {
+  // Required
+  success: boolean;
+
+  // On success
+  data?: T;
+  metadata?: ResultMetadata;
+
+  // On failure
+  error?: string;
+  errorCode?: ErrorCode;
+  suggestion?: string;
+}
+
+interface ResultMetadata {
+  executionTime?: number;    // Milliseconds
+  inputSize?: number;        // Bytes
+  outputSize?: number;       // Bytes
+  warnings?: string[];       // Non-fatal warnings
+  [key: string]: unknown;    // Custom metadata
+}
+```
+
+## Success Response
+
+```typescript
+return {
+  success: true,
+  data: {
+    formatted: '{\n  "key": "value"\n}',
+    lineCount: 3,
+    valid: true,
+  },
+  metadata: {
+    executionTime: 1.5,
+    inputSize: 15,
+    outputSize: 24,
+  },
+};
+```
+
+## Error Response
+
+```typescript
+return {
+  success: false,
+  error: 'Invalid JSON: Unexpected token at position 5',
+  errorCode: 'INVALID_INPUT',
+  suggestion: 'Check for missing quotes or commas',
+};
+```
+
+## Error Codes
+
+| Code | Description | HTTP Status |
+|------|-------------|-------------|
+| `INVALID_INPUT` | Input failed validation | 400 |
+| `MISSING_REQUIRED` | Required parameter missing | 400 |
+| `TYPE_ERROR` | Parameter type mismatch | 400 |
+| `CONSTRAINT_VIOLATION` | Value outside allowed range | 400 |
+| `EXECUTION_ERROR` | Runtime error during execution | 500 |
+| `TIMEOUT` | Execution exceeded time limit | 504 |
+| `RATE_LIMITED` | Too many requests | 429 |
+| `UNAUTHORIZED` | Authentication required | 401 |
+| `NOT_FOUND` | Resource not found | 404 |
+| `INTERNAL_ERROR` | Unexpected internal error | 500 |
+
+## Implementation Patterns
+
+### Basic Success/Error
+
+```typescript
+export const myFn: ToolFunction = (params) => {
+  const input = params.input as string;
+
+  // Validate required parameter
+  if (!input) {
+    return {
+      success: false,
+      error: 'Input is required',
+      errorCode: 'MISSING_REQUIRED',
+    };
+  }
+
+  // Process and return
+  return {
+    success: true,
+    data: { result: input.toUpperCase() },
+  };
+};
+```
+
+### With Metadata
+
+```typescript
+export const myFn: ToolFunction = (params) => {
+  const startTime = performance.now();
+  const input = params.input as string;
+
+  const result = process(input);
+
+  return {
+    success: true,
+    data: result,
+    metadata: {
+      executionTime: performance.now() - startTime,
+      inputSize: input.length,
+      outputSize: result.length,
+    },
+  };
+};
+```
+
+### With Warnings
+
+```typescript
+export const hashFn: ToolFunction = (params) => {
+  const algorithm = params.algorithm as string;
+
+  const warnings: string[] = [];
+  if (algorithm === 'SHA-1') {
+    warnings.push('SHA-1 is deprecated for security purposes');
+  }
+
+  return {
+    success: true,
+    data: { hash: computeHash(params.input, algorithm) },
+    metadata: {
+      warnings: warnings.length > 0 ? warnings : undefined,
+    },
+  };
+};
+```
+
+### Try-Catch Pattern
+
+```typescript
+export const myFn: ToolFunction = (params) => {
+  try {
+    const parsed = JSON.parse(params.json as string);
+    return {
+      success: true,
+      data: { parsed, valid: true },
+    };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Parse error: ${(e as Error).message}`,
+      errorCode: 'INVALID_INPUT',
+      suggestion: 'Ensure the input is valid JSON',
+    };
+  }
+};
+```
+
+### Async with Timeout
+
+```typescript
+export const myFn: ToolFunction = async (params, context) => {
+  const controller = new AbortController();
+  const timeout = context?.timeout ?? 30000;
+
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const result = await fetchWithAbort(params.url, controller.signal);
+    clearTimeout(timeoutId);
+
+    return { success: true, data: result };
+  } catch (e) {
+    clearTimeout(timeoutId);
+
+    if ((e as Error).name === 'AbortError') {
+      return {
+        success: false,
+        error: 'Request timed out',
+        errorCode: 'TIMEOUT',
+      };
+    }
+
+    return {
+      success: false,
+      error: (e as Error).message,
+      errorCode: 'EXECUTION_ERROR',
+    };
+  }
+};
+```
+
+## Result Validation
+
+```typescript
+import { validateToolResult } from '@conveniencepro/ctp-core';
+
+const result = myFn(params);
+const validation = validateToolResult(result);
+
+if (!validation.valid) {
+  console.error('Invalid result format:', validation.errors);
+}
+```
+
+## JSON Schema
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CTP Tool Result",
+  "type": "object",
+  "required": ["success"],
+  "properties": {
+    "success": { "type": "boolean" },
+    "data": {},
+    "error": { "type": "string" },
+    "errorCode": {
+      "type": "string",
+      "enum": [
+        "INVALID_INPUT", "MISSING_REQUIRED", "TYPE_ERROR",
+        "CONSTRAINT_VIOLATION", "EXECUTION_ERROR", "TIMEOUT",
+        "RATE_LIMITED", "UNAUTHORIZED", "NOT_FOUND", "INTERNAL_ERROR"
+      ]
+    },
+    "suggestion": { "type": "string" },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "executionTime": { "type": "number" },
+        "warnings": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
+```

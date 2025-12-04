@@ -1,0 +1,245 @@
+---
+title: 'JSON Formatter'
+description: 'Reference implementation of a sync CTP tool'
+---
+
+# JSON Formatter
+
+A synchronous CTP tool demonstrating multiple parameters and validation.
+
+## Overview
+
+| Property | Value |
+|----------|-------|
+| **ID** | `json-formatter` |
+| **Category** | `formatters` |
+| **Execution Mode** | `client` |
+| **Method** | `POST` |
+
+## Parameters
+
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `json` | `textarea` | Yes | - | JSON string to format |
+| `indent` | `select` | No | `2` | Indentation style |
+| `sortKeys` | `boolean` | No | `false` | Sort object keys |
+
+### Indent Options
+
+| Value | Label |
+|-------|-------|
+| `0` | Minified |
+| `2` | 2 spaces |
+| `4` | 4 spaces |
+| `tab` | Tab |
+
+## Example
+
+**Input:**
+```json
+{
+  "json": "{\"b\":2,\"a\":1}",
+  "indent": "2",
+  "sortKeys": true
+}
+```
+
+**Output:**
+```json
+{
+  "success": true,
+  "data": {
+    "formatted": "{\n  \"a\": 1,\n  \"b\": 2\n}",
+    "valid": true,
+    "lineCount": 4,
+    "characterCount": 24
+  },
+  "metadata": {
+    "executionTime": 0.5,
+    "inputSize": 15,
+    "outputSize": 24
+  }
+}
+```
+
+## Implementation
+
+```typescript
+import type { ToolDefinition, ToolFunction } from '@conveniencepro/ctp-core';
+
+interface JsonFormatterResult {
+  formatted: string;
+  valid: boolean;
+  lineCount: number;
+  characterCount: number;
+}
+
+export const jsonFormatterDefinition: ToolDefinition = {
+  id: 'json-formatter',
+  name: 'JSON Formatter',
+  description: 'Format, validate, and beautify JSON data with customizable indentation.',
+  category: 'formatters',
+  tags: ['json', 'format', 'beautify', 'validate', 'minify'],
+  method: 'POST',
+  parameters: [
+    {
+      name: 'json',
+      type: 'textarea',
+      label: 'JSON Input',
+      description: 'The JSON string to format',
+      required: true,
+      placeholder: '{"name": "example"}',
+      validation: { minLength: 1, maxLength: 1000000 },
+    },
+    {
+      name: 'indent',
+      type: 'select',
+      label: 'Indentation',
+      description: 'Number of spaces for indentation',
+      required: false,
+      defaultValue: '2',
+      options: [
+        { value: '0', label: 'Minified' },
+        { value: '2', label: '2 spaces' },
+        { value: '4', label: '4 spaces' },
+        { value: 'tab', label: 'Tab' },
+      ],
+    },
+    {
+      name: 'sortKeys',
+      type: 'boolean',
+      label: 'Sort Keys',
+      description: 'Sort object keys alphabetically',
+      required: false,
+      defaultValue: false,
+    },
+  ],
+  outputDescription: 'Formatted JSON string',
+  example: {
+    input: { json: '{"a":1}', indent: '2' },
+    output: { formatted: '{\n  "a": 1\n}', valid: true, lineCount: 3, characterCount: 14 },
+  },
+  version: '1.0.0',
+  icon: '📋',
+  executionMode: 'client',
+};
+
+function sortObjectKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(sortObjectKeys);
+  if (obj !== null && typeof obj === 'object') {
+    const sorted: Record<string, unknown> = {};
+    Object.keys(obj as Record<string, unknown>).sort().forEach(key => {
+      sorted[key] = sortObjectKeys((obj as Record<string, unknown>)[key]);
+    });
+    return sorted;
+  }
+  return obj;
+}
+
+export const jsonFormatterFn: ToolFunction<JsonFormatterResult> = (params) => {
+  const startTime = performance.now();
+  const jsonInput = params.json as string;
+  const indentOption = (params.indent as string) || '2';
+  const sortKeys = params.sortKeys === true || params.sortKeys === 'true';
+
+  // Validation
+  if (!jsonInput) {
+    return {
+      success: false,
+      error: 'JSON input is required',
+      errorCode: 'MISSING_REQUIRED',
+    };
+  }
+
+  // Parse JSON
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(jsonInput);
+  } catch (e) {
+    return {
+      success: false,
+      error: `Invalid JSON: ${(e as Error).message}`,
+      errorCode: 'INVALID_INPUT',
+      suggestion: 'Check for missing quotes, commas, or brackets',
+    };
+  }
+
+  // Sort keys if requested
+  if (sortKeys) {
+    parsed = sortObjectKeys(parsed);
+  }
+
+  // Format with selected indentation
+  const indent = indentOption === 'tab' ? '\t' : parseInt(indentOption) || 2;
+  const formatted = JSON.stringify(parsed, null, indent);
+
+  return {
+    success: true,
+    data: {
+      formatted,
+      valid: true,
+      lineCount: formatted.split('\n').length,
+      characterCount: formatted.length,
+    },
+    metadata: {
+      executionTime: performance.now() - startTime,
+      inputSize: jsonInput.length,
+      outputSize: formatted.length,
+    },
+  };
+};
+
+export default { definition: jsonFormatterDefinition, fn: jsonFormatterFn };
+```
+
+## Key Patterns
+
+### Performance Metadata
+
+Track execution metrics:
+
+```typescript
+const startTime = performance.now();
+// ... processing ...
+metadata: {
+  executionTime: performance.now() - startTime,
+}
+```
+
+### Deep Object Sorting
+
+Recursively sort nested object keys:
+
+```typescript
+function sortObjectKeys(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(sortObjectKeys);
+  if (obj !== null && typeof obj === 'object') {
+    const sorted: Record<string, unknown> = {};
+    Object.keys(obj).sort().forEach(key => {
+      sorted[key] = sortObjectKeys(obj[key]);
+    });
+    return sorted;
+  }
+  return obj;
+}
+```
+
+### Error Suggestions
+
+Provide actionable error messages:
+
+```typescript
+return {
+  success: false,
+  error: `Invalid JSON: ${(e as Error).message}`,
+  errorCode: 'INVALID_INPUT',
+  suggestion: 'Check for missing quotes, commas, or brackets',
+};
+```
+
+## Error Handling
+
+| Error Code | Cause |
+|------------|-------|
+| `MISSING_REQUIRED` | `json` parameter not provided |
+| `INVALID_INPUT` | JSON parse error |

@@ -1,0 +1,139 @@
+---
+title: 'LLM Integration'
+description: 'Documents for AI-powered tool generation'
+---
+
+# LLM Integration
+
+CTP provides specialized documents that enable AI models to generate compliant tools.
+
+## Available Documents
+
+<CardGroup cols={2}>
+  <Card title="Tool Generator" icon="wand-magic-sparkles" href="/llm-prompts/tool-generator">
+    Complete prompt for generating CTP tools
+  </Card>
+  <Card title="Schema Reference" icon="book" href="/llm-prompts/schema-reference">
+    Compact schema for quick AI lookups
+  </Card>
+</CardGroup>
+
+## How It Works
+
+1. **Copy the prompt** from the Tool Generator page
+2. **Paste into your AI** conversation (Claude, GPT-4, etc.)
+3. **Describe the tool** you want to create
+4. **Receive compliant code** that follows CTP standards
+
+## Example Workflow
+
+### Step 1: Provide the Prompt
+
+Copy the entire [Tool Generator](/llm-prompts/tool-generator) document and paste it into your AI conversation.
+
+### Step 2: Request a Tool
+
+```
+Create a URL encoder/decoder tool that:
+- Encodes text for use in URLs
+- Decodes URL-encoded strings back to text
+- Supports encoding all characters or just special ones
+```
+
+### Step 3: Receive Complete Implementation
+
+The AI will generate:
+- TypeScript type definitions
+- Complete tool definition
+- Tool function implementation
+- Export statement
+
+## Quick Reference
+
+For quick AI lookups during development, the [Schema Reference](/llm-prompts/schema-reference) provides:
+
+- Field types and descriptions
+- Parameter type options
+- Error codes
+- Category list
+- Common patterns
+
+## Supported AI Models
+
+These documents are designed to work with:
+
+| Model | Provider | Notes |
+|-------|----------|-------|
+| Claude 3 | Anthropic | Best results |
+| Claude 3.5 Sonnet | Anthropic | Fast, accurate |
+| GPT-4 | OpenAI | Good results |
+| GPT-4 Turbo | OpenAI | Good results |
+| Gemini Pro | Google | Compatible |
+
+## Best Practices
+
+### Be Specific
+
+```
+❌ "Make a text tool"
+✅ "Create a tool that counts words, characters, and sentences in text"
+```
+
+### Include Features
+
+```
+❌ "Make a hash tool"
+✅ "Create a hash generator that supports SHA-256 and SHA-512, with hex and base64 output options"
+```
+
+### Mention Edge Cases
+
+```
+❌ "Make a JSON formatter"
+✅ "Create a JSON formatter with options for indentation, that handles invalid JSON gracefully with helpful error messages"
+```
+
+## Integration Options
+
+### Manual Copy-Paste
+
+1. Copy the Tool Generator prompt
+2. Paste into AI chat
+3. Request your tool
+4. Copy generated code to your project
+
+### API Integration
+
+```typescript
+import Anthropic from '@anthropic-ai/sdk';
+import { TOOL_GENERATOR_PROMPT } from './prompts';
+
+const client = new Anthropic();
+
+async function generateTool(description: string) {
+  const response = await client.messages.create({
+    model: 'claude-3-5-sonnet-20241022',
+    max_tokens: 4096,
+    system: TOOL_GENERATOR_PROMPT,
+    messages: [
+      {
+        role: 'user',
+        content: `Create a CTP tool: ${description}`,
+      },
+    ],
+  });
+
+  return response.content[0].text;
+}
+```
+
+### MCP Integration
+
+CTP tools can be exposed as MCP tools for direct AI access:
+
+```typescript
+import { generateMCPManifest } from '@conveniencepro/ctp-discovery';
+
+// Expose your tools to AI assistants
+const manifest = generateMCPManifest(myTools);
+```

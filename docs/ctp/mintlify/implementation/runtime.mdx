@@ -1,0 +1,280 @@
+---
+title: 'Runtime'
+description: 'Tool execution runtime and registry'
+---
+
+# Runtime
+
+The CTP runtime provides tool registration, execution, and lifecycle management.
+
+## Tool Registry
+
+The registry maintains a collection of registered tools:
+
+```typescript
+import { ToolRegistry } from '@conveniencepro/ctp-runtime';
+
+const registry = new ToolRegistry();
+```
+
+### Register Tools
+
+```typescript
+import jsonFormatter from './tools/json-formatter';
+import base64Encoder from './tools/base64-encoder';
+
+// Register individual tool
+registry.register(jsonFormatter.definition, jsonFormatter.fn);
+
+// Register multiple tools
+registry.registerAll([
+  { definition: jsonFormatter.definition, fn: jsonFormatter.fn },
+  { definition: base64Encoder.definition, fn: base64Encoder.fn },
+]);
+```
+
+### Query Registry
+
+```typescript
+// Get specific tool
+const tool = registry.get('json-formatter');
+// { definition: {...}, fn: (...) => {...} }
+
+// Check if tool exists
+registry.has('json-formatter'); // true
+
+// List all tool IDs
+registry.list(); // ['json-formatter', 'base64-encoder']
+
+// Get all definitions
+registry.getDefinitions(); // [definition1, definition2]
+
+// Find by category
+registry.findByCategory('formatters'); // [definition]
+
+// Find by tag
+registry.findByTag('json'); // [definition]
+```
+
+### Unregister Tools
+
+```typescript
+// Remove a tool
+registry.unregister('json-formatter');
+
+// Clear all tools
+registry.clear();
+```
+
+## Execution Runtime
+
+Create a runtime for executing tools:
+
+```typescript
+import { createRuntime } from '@conveniencepro/ctp-runtime';
+
+const runtime = createRuntime(registry, {
+  timeout: 30000,        // Default 30s timeout
+  validateInput: true,   // Validate inputs
+  validateOutput: true,  // Validate outputs
+});
+```
+
+### Execute Tools
+
+```typescript
+// Basic execution
+const result = await runtime.execute('json-formatter', {
+  json: '{"a":1}',
+  indent: '2',
+});
+
+// With options
+const result = await runtime.execute('json-formatter', params, {
+  timeout: 5000,
+  context: {
+    userId: 'user-123',
+    requestId: 'req-456',
+  },
+});
+```
+
+### Execution Context
+
+```typescript
+interface ExecutionContext {
+  toolId: string;
+  userId?: string;
+  requestId?: string;
+  timeout?: number;
+  abortSignal?: AbortSignal;
+  metadata?: Record<string, unknown>;
+}
+
+// Context is passed to tool function
+export const myFn: ToolFunction = (params, context) => {
+  console.log('Executing for user:', context?.userId);
+  // ...
+};
+```
+
+## Timeout Handling
+
+```typescript
+const runtime = createRuntime(registry, {
+  timeout: 10000, // 10 second default
+});
+
+// Override per-execution
+const result = await runtime.execute('slow-tool', params, {
+  timeout: 60000, // 60 seconds
+});
+
+// Handle timeout
+if (!result.success && result.errorCode === 'TIMEOUT') {
+  console.error('Execution timed out');
+}
+```
+
+## Abort Support
+
+Cancel long-running operations:
+
+```typescript
+const controller = new AbortController();
+
+// Start execution
+const promise = runtime.execute('tool-id', params, {
+  abortSignal: controller.signal,
+});
+
+// Abort after 5 seconds
+setTimeout(() => controller.abort(), 5000);
+
+try {
+  const result = await promise;
+} catch (error) {
+  if (error.name === 'AbortError') {
+    console.log('Execution was aborted');
+  }
+}
+```
+
+## Parallel Execution
+
+```typescript
+// Execute multiple tools in parallel
+const results = await Promise.all([
+  runtime.execute('tool-1', params1),
+  runtime.execute('tool-2', params2),
+  runtime.execute('tool-3', params3),
+]);
+
+// Process results
+results.forEach((result, index) => {
+  if (result.success) {
+    console.log(`Tool ${index + 1} succeeded:`, result.data);
+  } else {
+    console.error(`Tool ${index + 1} failed:`, result.error);
+  }
+});
+```
+
+## Batch Execution
+
+```typescript
+// Execute same tool with multiple inputs
+const inputs = [
+  { json: '{"a":1}' },
+  { json: '{"b":2}' },
+  { json: '{"c":3}' },
+];
+
+const results = await Promise.all(
+  inputs.map(input => runtime.execute('json-formatter', input))
+);
+```
+
+## Event Hooks
+
+```typescript
+const runtime = createRuntime(registry, {
+  hooks: {
+    beforeExecute: async (toolId, params, context) => {
+      console.log(`Starting ${toolId}`);
+      // Return modified params or throw to abort
+      return params;
+    },
+
+    afterExecute: async (toolId, params, result, context) => {
+      console.log(`Finished ${toolId}:`, result.success);
+      // Return modified result
+      return result;
+    },
+
+    onError: async (toolId, error, context) => {
+      console.error(`Error in ${toolId}:`, error);
+      // Log, report, etc.
+    },
+  },
+});
+```
+
+## Runtime Configuration
+
+```typescript
+interface RuntimeConfig {
+  // Timeouts
+  timeout?: number;              // Default execution timeout
+  maxConcurrent?: number;        // Max parallel executions
+
+  // Validation
+  validateInput?: boolean;       // Validate inputs
+  validateOutput?: boolean;      // Validate outputs
+  strictMode?: boolean;          // Strict validation
+
+  // Error handling
+  throwOnError?: boolean;        // Throw instead of return error
+  retries?: number;              // Auto-retry failed executions
+  retryDelay?: number;           // Delay between retries
+
+  // Logging
+  logger?: Logger;               // Custom logger
+  logLevel?: 'debug' | 'info' | 'warn' | 'error';
+
+  // Hooks
+  hooks?: RuntimeHooks;
+}
+```
+
+## Express.js Integration
+
+```typescript
+import express from 'express';
+import { createRuntime, ToolRegistry } from '@conveniencepro/ctp-runtime';
+
+const app = express();
+const registry = new ToolRegistry();
+const runtime = createRuntime(registry);
+
+// Register tools...
+
+app.post('/api/tools/:toolId', express.json(), async (req, res) => {
+  const { toolId } = req.params;
+
+  if (!registry.has(toolId)) {
+    return res.status(404).json({
+      success: false,
+      error: 'Tool not found',
+      errorCode: 'NOT_FOUND',
+    });
+  }
+
+  const result = await runtime.execute(toolId, req.body);
+  const status = result.success ? 200 : 400;
+
+  res.status(status).json(result);
+});
+
+app.listen(3000);
+```
