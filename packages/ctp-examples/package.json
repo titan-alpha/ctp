@@ -28,6 +28,15 @@
   ],
   "author": "ConveniencePro",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/titan-alpha/ctp.git",
+    "directory": "packages/ctp-examples"
+  },
+  "homepage": "https://spec.conveniencepro.cc/examples/overview",
+  "bugs": {
+    "url": "https://github.com/titan-alpha/ctp/issues"
+  },
   "dependencies": {
     "@conveniencepro/ctp-core": "^1.0.0",
     "@conveniencepro/ctp-runtime": "^1.0.0"

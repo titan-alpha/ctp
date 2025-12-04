@@ -52,12 +52,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/conveniencepro/convenience-pro.git",
+    "url": "https://github.com/titan-alpha/ctp.git",
     "directory": "packages/ctp-discovery"
   },
-  "homepage": "https://conveniencepro.cc/docs/ctp",
+  "homepage": "https://spec.conveniencepro.cc",
   "bugs": {
-    "url": "https://github.com/conveniencepro/convenience-pro/issues"
+    "url": "https://github.com/titan-alpha/ctp/issues"
   },
   "dependencies": {
     "@conveniencepro/ctp-core": "^1.0.0"

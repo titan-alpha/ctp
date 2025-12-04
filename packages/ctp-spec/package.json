@@ -32,6 +32,15 @@
   ],
   "author": "ConveniencePro",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/titan-alpha/ctp.git",
+    "directory": "packages/ctp-spec"
+  },
+  "homepage": "https://spec.conveniencepro.cc",
+  "bugs": {
+    "url": "https://github.com/titan-alpha/ctp/issues"
+  },
   "devDependencies": {
     "typescript": "^5.3.0",
     "ajv": "^8.12.0"
