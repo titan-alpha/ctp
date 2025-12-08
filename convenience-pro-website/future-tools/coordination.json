@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "instances": {},
+  "tools": {
+    "pdf-merger": {
+      "status": "available",
+      "priority": "high",
+      "estimatedHours": 7
+    }
+  },
+  "stats": {
+    "totalTools": 1,
+    "available": 1,
+    "inProgress": 0,
+    "completed": 0,
+    "failed": 0,
+    "activeInstances": 0
+  }
+}

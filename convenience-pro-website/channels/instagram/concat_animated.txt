@@ -1,0 +1,3 @@
+file 'slide1_animated.mp4'
+file 'slide2_video.mp4'
+file 'slide3_animated.mp4'
