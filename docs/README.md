@@ -35,6 +35,17 @@ System design and architectural decision records.
 | [MCP Artifact Architecture](./mcp-artifact-architecture.md) | "Tool as Artifact" pattern for LLM integration |
 | [Browser LLM Architecture](./browser-llm-architecture.md) | Client-side LLM inference with WebGPU |
 
+### Platform Documentation
+
+ConveniencePro service architecture and implementation.
+
+| Document | Description |
+|----------|-------------|
+| [System Architecture Overview](./platform/SYSTEM_ARCHITECTURE_OVERVIEW.md) | Complete system design |
+| [Execution Modes & Data Flow](./platform/EXECUTION_MODES_AND_DATA_FLOW.md) | Client-side vs server-side execution |
+| [HTTP API Reference](./platform/HTTP_API_REFERENCE.md) | REST API documentation |
+| [Minimal Logging Pattern](./platform/MINIMAL_LOGGING_PATTERN.md) | Privacy-focused serverless logging |
+
 ### Implementation Guides
 
 Practical guides for developers.
@@ -75,6 +86,11 @@ docs/
 ├── README.md                         ← You are here
 ├── mcp-artifact-architecture.md      # MCP integration design
 ├── browser-llm-architecture.md       # Browser LLM design
+├── platform/                         # ConveniencePro platform docs
+│   ├── SYSTEM_ARCHITECTURE_OVERVIEW.md
+│   ├── EXECUTION_MODES_AND_DATA_FLOW.md
+│   ├── HTTP_API_REFERENCE.md
+│   └── MINIMAL_LOGGING_PATTERN.md
 └── ctp/                              # ConveniencePro Tool Protocol
     ├── README.md                     # CTP overview
     ├── SPECIFICATION.md              # Formal specification
